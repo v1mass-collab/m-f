@@ -1,0 +1,1198 @@
+repo: https://github.com/archanareddyse/OLTRS.git 
+
+set-7:
+Clone the repository:
+git clone https://github.com/archanareddyse/OLTRS.git
+cd OLTRS
+
+
+Build the application:
+mvn clean package
+
+
+Check the generated WAR:
+dir target
+
+
+Expected:
+ticket-reservation.war
+
+
+Dockerfile for OLTRS
+Create a Dockerfile in the project root:
+
+FROM tomcat:9.0-jdk8-temurin
+
+COPY target/ticket-reservation.war /usr/local/tomcat/webapps/ticket-reservation.war
+
+EXPOSE 8080
+
+CMD ["catalina.sh", "run"]
+
+
+
+Build and test locally:
+docker build -t oltrs-app:1.0 .
+docker run -d --name oltrs -p 8080:8080 oltrs-app:1.0
+
+
+Open:
+
+http://localhost:8080/ticket-reservation/
+
+If the application requires a database or additional runtime configuration, configure those separately; the repository's POM alone does not establish a working database connection.
+
+SET-7
+Q1. Deployment using Docker Compose (25 Marks)
+Aim
+Deploy a web application and MySQL database using Docker Compose.
+Step 1: Create a project folder
+mkdir OLTRS-Compose
+cd OLTRS-Compose
+
+
+Step 2: Create docker-compose.yml
+
+services:
+
+  web:
+    image: your-dockerhub-username/oltrs:latest
+    container_name: oltrs-web
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    environment:
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_NAME: oltrs
+      DB_USER: oltrsuser
+      DB_PASSWORD: oltrspass
+
+  db:
+    image: mysql:8.0
+    container_name: oltrs-db
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_DATABASE: oltrs
+      MYSQL_USER: oltrsuser
+      MYSQL_PASSWORD: oltrspass
+      MYSQL_ROOT_PASSWORD: rootpass
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+volumes:
+  mysql_data:
+
+
+
+Important: Replace your-dockerhub-username/oltrs:latest with the Docker Hub image you have built and pushed. The DB_* environment variable names are examples; your web application must actually support them and use MySQL. The current OLTRS POM does not by itself confirm that database configuration.
+Step 3: Start the services
+docker compose up -d
+
+
+Check:
+docker compose ps
+
+
+Step 4: Check logs
+docker compose logs
+
+
+For an individual service:
+docker compose logs web
+docker compose logs db
+
+
+Step 5: Verify the website
+Open:
+
+http://localhost:8080/ticket-reservation/
+Step 6: Stop and clean up
+docker compose down
+
+
+To also remove the database volume (this deletes stored database data):
+docker compose down -v
+
+
+
+Q2. Jenkins Scripted Pipeline – CI/CD Automation (25 Marks)
+Aim
+Create a Jenkins Scripted Pipeline for OLTRS that clones GitHub source code, builds and tests the application using Maven, creates a Docker image and pushes it to Docker Hub.
+Step 1: Configure Jenkins prerequisites
+Install or verify:
+- Git plugin
+- Pipeline plugin
+- Docker Pipeline plugin (if using its Docker DSL)
+- Maven installation
+- JDK installation
+Go to:
+
+Manage Jenkins → Tools
+
+Configure Maven with the name:
+Maven3
+
+
+Step 2: Configure Docker Hub credentials
+Go to:
+
+Manage Jenkins → Credentials → System → Global credentials → Add Credentials
+
+Select:
+- Kind: Username with password
+- Username: Your Docker Hub username
+- Password: Docker Hub access token
+- ID: dockerhub-credentials
+Use an access token rather than your Docker Hub account password.
+Step 3: Create the Jenkins Pipeline
+Create a new Pipeline item named:
+OLTRS-CI-CD
+
+
+Paste the following Scripted Pipeline:
+
+node {
+
+    def dockerImage
+
+    stage('Checkout') {
+        git branch: 'master',
+            url: 'https://github.com/archanareddyse/OLTRS.git'
+    }
+
+    stage('Maven Build') {
+        def mvn = tool name: 'Maven3',
+                         type: 'hudson.tasks.Maven$MavenInstallation'
+
+        env.PATH = "${mvn}/bin:${env.PATH}"
+
+        sh 'mvn clean package'
+    }
+
+    stage('Test') {
+        sh 'mvn test'
+    }
+
+    stage('Docker Build') {
+        dockerImage = docker.build(
+            'YOUR_DOCKERHUB_USERNAME/oltrs:latest'
+        )
+    }
+
+    stage('Docker Push') {
+        docker.withRegistry(
+            'https://index.docker.io/v1/',
+            'dockerhub-credentials'
+        ) {
+            dockerImage.push()
+        }
+    }
+}
+
+
+
+Replace YOUR_DOCKERHUB_USERNAME with your actual Docker Hub username.
+
+For Windows Jenkins agents, replace sh with bat and configure the Docker CLI and Maven on that agent.
+Step 4: Configure GitHub Webhook
+Open your GitHub repository:
+
+OLTRS → Settings → Webhooks → Add webhook
+
+Configure:
+Field	Value
+Payload URL	http://<JENKINS-PUBLIC-URL>/github-webhook/
+Content type	application/json
+Events	Just the push event
+Active	Enabled
+
+In Jenkins, enable:
+
+GitHub hook trigger for GITScm polling
+
+under the job's Build Triggers.
+
+A public, reachable Jenkins URL is required. A normal localhost address cannot receive GitHub webhooks.
+Step 5: Execute and verify
+Click:
+
+Build Now
+
+Open:
+
+Build → Console Output
+
+Verify that these stages complete:
+1. Checkout
+2. Maven Build
+3. Test
+4. Docker Build
+5. Docker Push
+Check Docker Hub to confirm that the image has been pushed.
+
+Q3. Containerization and Deployment using Minikube (25 Marks)
+Aim
+Deploy the OLTRS Docker image from Docker Hub using Kubernetes and Minikube, expose it using NodePort and scale it to four replicas.
+Step 1: Start Minikube
+minikube start
+
+
+Verify:
+minikube status
+kubectl get nodes
+
+
+Step 2: Push the Docker image to Docker Hub
+If you have not completed Q2, build and push the image manually.
+docker login
+docker build -t YOUR_DOCKERHUB_USERNAME/oltrs:latest .
+docker push YOUR_DOCKERHUB_USERNAME/oltrs:latest
+
+
+Step 3: Create deployment.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: oltrs-deployment
+
+spec:
+  replicas: 4
+
+  selector:
+    matchLabels:
+      app: oltrs
+
+  template:
+    metadata:
+      labels:
+        app: oltrs
+
+    spec:
+      containers:
+        - name: oltrs-container
+          image: YOUR_DOCKERHUB_USERNAME/oltrs:latest
+          imagePullPolicy: Always
+
+          ports:
+            - containerPort: 8080
+
+
+
+Replace the Docker Hub username.
+
+Apply:
+kubectl apply -f deployment.yaml
+
+
+Step 4: Create service.yaml
+
+apiVersion: v1
+kind: Service
+
+metadata:
+  name: oltrs-service
+
+spec:
+  type: NodePort
+
+  selector:
+    app: oltrs
+
+  ports:
+    - port: 8080
+      targetPort: 8080
+      nodePort: 30080
+
+
+
+Apply:
+kubectl apply -f service.yaml
+
+
+Step 5: Verify the Deployment
+kubectl get nodes
+kubectl get deployments
+kubectl get pods
+kubectl get services
+
+
+You should see four OLTRS Pods.
+
+If some Pods are not running:
+kubectl describe pods
+kubectl get events
+kubectl logs <pod-name>
+
+
+Step 6: Verify the four replicas
+kubectl scale deployment oltrs-deployment --replicas=4
+
+
+kubectl get deployment oltrs-deployment
+kubectl get pods
+
+
+Step 7: Access the application
+minikube service oltrs-service --url
+
+
+Open the returned URL followed by:
+/ticket-reservation/
+
+
+Step 8: Delete Kubernetes resources
+kubectl delete -f service.yaml
+kubectl delete -f deployment.yaml
+
+
+Verify:
+kubectl get deployments
+kubectl get services
+kubectl get pods
+
+
+Stop Minikube:
+minikube stop
+
+
+
+Q4. Deployment in AWS Environment using Amazon EC2 (25 Marks)
+Aim
+Launch an Ubuntu EC2 instance, configure its Security Group, clone the OLTRS repository and deploy the web application.
+Step 1: Launch EC2
+1. Open AWS Console.
+2. Navigate to EC2 → Launch Instance.
+3. Choose Ubuntu Server.
+4. Select an eligible instance type.
+5. Create or select a key pair.
+6. Configure a Security Group.
+7. Launch the instance.
+Step 2: Configure Security Group
+Add these inbound rules:
+Type	Port	Source
+SSH	22	My IP
+HTTP	80	0.0.0.0/0
+Custom TCP	8080	0.0.0.0/0
+
+Port 8080 is needed if you access Tomcat directly. For production, avoid exposing unnecessary ports publicly.
+Step 3: Connect using SSH
+In PowerShell:
+cd Downloads
+ssh -i "oltrs-key.pem" ubuntu@<EC2-PUBLIC-IP>
+
+
+Step 4: Install required tools
+On Ubuntu:
+sudo apt update
+sudo apt install git docker.io maven openjdk-17-jdk -y
+
+
+Start Docker:
+sudo systemctl start docker
+sudo systemctl enable docker
+
+
+Verify:
+git --version
+mvn -version
+docker --version
+java -version
+
+
+The repository targets Java 8 bytecode. If the Maven build fails due to the Java version or a compiler configuration, check the configured JDK and Maven compiler settings before continuing.
+Step 5: Clone OLTRS
+git clone https://github.com/archanareddyse/OLTRS.git
+cd OLTRS
+
+
+Step 6: Build the application
+mvn clean package
+
+
+Verify:
+ls target/
+
+
+Expected:
+ticket-reservation.war
+
+
+Step 7: Create the Dockerfile
+nano Dockerfile
+
+
+Add:
+FROM tomcat:9.0-jdk8-temurin
+
+COPY target/ticket-reservation.war /usr/local/tomcat/webapps/ticket-reservation.war
+
+EXPOSE 8080
+
+CMD ["catalina.sh", "run"]
+
+
+Step 8: Build and run Docker image
+sudo docker build -t oltrs-app .
+
+
+Run:
+sudo docker run -d \
+  --name oltrs-container \
+  -p 8080:8080 \
+  oltrs-app
+
+
+Verify:
+sudo docker ps
+sudo docker logs oltrs-container
+
+
+Step 9: Access the application
+Open:
+http://<EC2-PUBLIC-IP>:8080/ticket-reservation/
+
+
+If the application does not load, check:
+curl http://localhost:8080/ticket-reservation/
+sudo docker logs oltrs-container
+
+
+Step 10: Cleanup
+sudo docker stop oltrs-container
+sudo docker rm oltrs-container
+
+
+Terminate the EC2 instance when the practical is complete and check for unused billable resources.
+
+SET-8
+Q1. Docker Compose – Multi-Container Deployment with Nagios (25 Marks)
+Aim
+Deploy a web application and Nagios monitoring tool as separate Docker Compose services.
+Step 1: Create a folder
+mkdir OLTRS-Nagios
+cd OLTRS-Nagios
+
+
+Step 2: Create docker-compose.yml
+
+services:
+
+  web:
+    image: YOUR_DOCKERHUB_USERNAME/oltrs:latest
+    container_name: oltrs-web
+    ports:
+      - "8080:8080"
+    networks:
+      - monitoring
+
+  nagios:
+    image: nagios/nagios:latest
+    container_name: nagios
+    ports:
+      - "8081:80"
+    networks:
+      - monitoring
+
+networks:
+  monitoring:
+    driver: bridge
+
+
+
+Replace the Docker Hub username with the username and image you actually pushed.
+Step 3: Start both services
+docker compose up -d
+
+
+Verify:
+docker compose ps
+
+
+Step 4: Access the web application
+Open:
+
+http://localhost:8080/ticket-reservation/
+Step 5: Access Nagios
+Open:
+
+http://localhost:8081
+
+Check its logs if you need to identify the dashboard login details or startup errors:
+docker logs nagios
+
+
+Step 6: Verify networking
+Both containers are connected to the same Docker network.
+docker network ls
+
+
+Inspect the network:
+docker network inspect oltrs-nagios_monitoring
+
+
+The web service can be reached from another container on the Compose network using its service name and container port.
+
+Important monitoring note: Starting Nagios only provides the monitoring server and dashboard. It does not automatically add OLTRS as a monitored host or service. To monitor OLTRS, configure a Nagios host/service check using the web container's network name and the correct application URL or port.
+Step 7: Stop and remove services
+docker compose down
+
+
+
+Q2. Jenkins Pipeline View – Build Automation and Deployment (25 Marks)
+Aim
+Create a Jenkins pipeline that clones the forked OLTRS repository, builds and tests the Maven project, generates a WAR file, deploys it on Tomcat, creates a Docker image, pushes it to Docker Hub and sends an email notification.
+Step 1: Fork the repository
+Open:
+
+OLTRS GitHub repository
+
+Click Fork and create a copy in your GitHub account.
+
+Use your fork URL in the pipeline:
+https://github.com/YOUR_GITHUB_USERNAME/OLTRS.git
+
+
+Step 2: Install Jenkins plugins
+Install or verify:
+- Git plugin
+- Pipeline plugin
+- Pipeline Stage View plugin
+- Docker Pipeline plugin
+- Email Extension plugin
+The Pipeline Stage View plugin displays stage-wise execution status.
+Step 3: Configure Jenkins tools
+Go to:
+
+Manage Jenkins → Tools
+
+Configure Maven with the name:
+Maven3
+
+
+Make sure JDK and Docker are available on the Jenkins agent.
+Step 4: Configure Docker Hub credentials
+Go to:
+
+Manage Jenkins → Credentials → Global credentials → Add Credentials
+
+Choose:
+- Kind: Username with password
+- Username: Docker Hub username
+- Password: Docker Hub access token
+- ID: dockerhub-credentials
+Step 5: Create a Dockerfile
+In the OLTRS repository root, create:
+
+FROM tomcat:9.0-jdk8-temurin
+
+COPY target/ticket-reservation.war /usr/local/tomcat/webapps/ticket-reservation.war
+
+EXPOSE 8080
+
+CMD ["catalina.sh", "run"]
+
+
+
+This image contains Tomcat and the built OLTRS WAR.
+Step 6: Create the Jenkins Pipeline
+Create a Pipeline job named:
+OLTRS-Deployment
+
+
+Paste this Scripted Pipeline:
+
+node {
+
+    def dockerImage
+
+    try {
+
+        stage('Checkout') {
+            git branch: 'master',
+                url: 'https://github.com/YOUR_GITHUB_USERNAME/OLTRS.git'
+        }
+
+        stage('Maven Build') {
+            def mvn = tool name: 'Maven3',
+                type: 'hudson.tasks.Maven$MavenInstallation'
+
+            env.PATH = "${mvn}/bin:${env.PATH}"
+
+            sh 'mvn clean package'
+        }
+
+        stage('Test') {
+            sh 'mvn test'
+        }
+
+        stage('Deploy on Tomcat') {
+            dockerImage = docker.build(
+                'YOUR_DOCKERHUB_USERNAME/oltrs:latest'
+            )
+
+            sh 'docker rm -f oltrs-test || true'
+
+            sh 'docker run -d --name oltrs-test -p 8080:8080 YOUR_DOCKERHUB_USERNAME/oltrs:latest'
+        }
+
+        stage('Docker Push') {
+            docker.withRegistry(
+                'https://index.docker.io/v1/',
+                'dockerhub-credentials'
+            ) {
+                dockerImage.push()
+            }
+        }
+
+    } catch (err) {
+
+        currentBuild.result = 'FAILURE'
+        throw err
+
+    } finally {
+
+        if (currentBuild.result == 'FAILURE') {
+            emailext(
+                subject: "OLTRS Build Failed",
+                body: "Check Jenkins console output for details.",
+                to: "YOUR_EMAIL_ADDRESS"
+            )
+        }
+    }
+}
+
+
+
+Replace the GitHub username, Docker Hub username and email address with your own values.
+
+The Jenkins agent needs Docker access and the ability to run containers. This example deploys the built Tomcat image as a container on the Jenkins agent for verification.
+Step 7: Configure GitHub Webhook
+In GitHub:
+
+Repository → Settings → Webhooks → Add webhook
+
+Set:
+Payload URL:
+http://<JENKINS-PUBLIC-URL>/github-webhook/
+
+
+Content type:
+application/json
+
+
+Select the push event and enable the webhook.
+
+In Jenkins job configuration, enable:
+
+GitHub hook trigger for GITScm polling
+Step 8: Configure Pipeline View
+1. Open Jenkins Dashboard.
+2. Click the + icon or New View.
+3. Enter OLTRS-Pipeline-View.
+4. Select Pipeline Stage View if available.
+5. Select the OLTRS Pipeline job.
+6. Save.
+After a build, the view should show:
+- Checkout
+- Maven Build
+- Test
+- Deploy on Tomcat
+- Docker Push
+Step 9: Verify execution
+Click:
+
+Build Now → Console Output
+
+Check the Stage View for the status of each stage.
+
+For the deployment, open:
+
+http://localhost:8080/ticket-reservation/
+
+If Jenkins is running on a remote server, access the corresponding host and port instead.
+
+Email note: Configure SMTP in Jenkins under Manage Jenkins → System. The example sends an email only when the pipeline fails; successful builds do not send one.
+
+Q3. Containerization and Deployment using Minikube (25 Marks)
+This is the same four-replica OLTRS Kubernetes deployment as SET-7, but here are the complete steps again.
+Step 1: Start Minikube
+minikube start
+kubectl get nodes
+
+
+Step 2: Build and push the image
+From the OLTRS project directory:
+mvn clean package
+docker build -t YOUR_DOCKERHUB_USERNAME/oltrs:latest .
+docker login
+docker push YOUR_DOCKERHUB_USERNAME/oltrs:latest
+
+
+Step 3: Create deployment.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: oltrs-deployment
+
+spec:
+  replicas: 4
+
+  selector:
+    matchLabels:
+      app: oltrs
+
+  template:
+    metadata:
+      labels:
+        app: oltrs
+
+    spec:
+      containers:
+        - name: oltrs-container
+          image: YOUR_DOCKERHUB_USERNAME/oltrs:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+
+
+
+Apply:
+kubectl apply -f deployment.yaml
+
+
+Step 4: Create service.yaml
+
+apiVersion: v1
+kind: Service
+
+metadata:
+  name: oltrs-service
+
+spec:
+  type: NodePort
+
+  selector:
+    app: oltrs
+
+  ports:
+    - port: 8080
+      targetPort: 8080
+      nodePort: 30080
+
+
+
+Apply:
+kubectl apply -f service.yaml
+
+
+Step 5: Verify
+kubectl get nodes
+kubectl get deployments
+kubectl get pods
+kubectl get services
+
+
+Step 6: Scale to four replicas
+kubectl scale deployment oltrs-deployment --replicas=4
+
+
+Verify:
+kubectl get pods
+kubectl get deployment oltrs-deployment
+
+
+Step 7: Access the application
+minikube service oltrs-service --url
+
+
+Open the returned URL followed by:
+/ticket-reservation/
+
+
+Step 8: Cleanup
+kubectl delete -f service.yaml
+kubectl delete -f deployment.yaml
+minikube stop
+
+
+
+Q4. Deployment in AWS Environment using Amazon EC2 (25 Marks)
+Aim
+Deploy OLTRS on an Ubuntu EC2 instance and access it through its public IP address.
+Step 1: Launch an Ubuntu EC2 instance
+1. Open AWS Console.
+2. Navigate to EC2 → Launch Instance.
+3. Select Ubuntu Server.
+4. Select an eligible instance type.
+5. Create or select a .pem key pair.
+6. Configure the Security Group.
+7. Launch the instance.
+Step 2: Configure Security Group
+Type	Port	Source
+SSH	22	My IP
+HTTP	80	0.0.0.0/0
+Custom TCP	8080	0.0.0.0/0
+
+Step 3: Connect to EC2
+On Windows PowerShell:
+ssh -i "oltrs-key.pem" ubuntu@<EC2-PUBLIC-IP>
+
+
+Step 4: Install dependencies
+sudo apt update
+sudo apt install git docker.io maven openjdk-17-jdk -y
+
+
+Start Docker:
+sudo systemctl start docker
+sudo systemctl enable docker
+
+
+Step 5: Clone OLTRS
+git clone https://github.com/archanareddyse/OLTRS.git
+cd OLTRS
+
+
+If you have forked the repository, use your fork URL instead.
+Step 6: Build the Maven application
+mvn clean package
+
+
+Verify:
+ls target/
+
+
+Expected:
+ticket-reservation.war
+
+
+Step 7: Create Dockerfile
+FROM tomcat:9.0-jdk8-temurin
+
+COPY target/ticket-reservation.war /usr/local/tomcat/webapps/ticket-reservation.war
+
+EXPOSE 8080
+
+CMD ["catalina.sh", "run"]
+
+
+Step 8: Build and run
+sudo docker build -t oltrs-app .
+
+
+sudo docker run -d \
+  --name oltrs-container \
+  -p 8080:8080 \
+  oltrs-app
+
+
+Verify:
+sudo docker ps
+sudo docker logs oltrs-container
+
+
+Step 9: Access the website
+http://<EC2-PUBLIC-IP>:8080/ticket-reservation/
+
+
+Step 10: Cleanup
+sudo docker stop oltrs-container
+sudo docker rm oltrs-container
+
+
+Terminate the EC2 instance when finished and check for unused billable resources.
+
+SET-9
+SET-9 repeats the same four practical areas as SET-7, with the same OLTRS repository and deployment requirements. The key difference is that SET-9 explicitly includes the Docker Hub push and credentials in Q2.
+Q1. Deployment using Docker Compose (25 Marks)
+Follow SET-7 Q1 exactly:
+- Create docker-compose.yml.
+- Configure the web application and MySQL services.
+- Configure database name, username and password.
+- Map web port 8080 and database host port 3307.
+- Configure depends_on and persistent MySQL volume.
+- Run and verify both containers.
+Use the SET-7 Q1 Compose file, replacing the web image with your own Docker Hub image.
+Q2. Jenkins Scripted Pipeline – CI/CD Automation (25 Marks)
+Aim
+Clone OLTRS, build and test with Maven, create a Docker image and push it to Docker Hub using Jenkins credentials.
+Step 1: Configure Jenkins
+Install Git, Pipeline, Maven and Docker Pipeline plugins.
+
+Configure Maven under:
+
+Manage Jenkins → Tools
+
+Use the name:
+Maven3
+
+
+Add Docker Hub credentials:
+Field	Value
+Kind	Username with password
+Username	Docker Hub username
+Password	Docker Hub access token
+ID	dockerhub-credentials
+
+Step 2: Create Jenkins Pipeline
+Create a Pipeline job called:
+OLTRS-CI-CD
+
+
+Use this Scripted Pipeline:
+
+node {
+
+    def dockerImage
+
+    stage('Checkout') {
+        git branch: 'master',
+            url: 'https://github.com/archanareddyse/OLTRS.git'
+    }
+
+    stage('Maven Build') {
+        def mvn = tool name: 'Maven3',
+            type: 'hudson.tasks.Maven$MavenInstallation'
+
+        env.PATH = "${mvn}/bin:${env.PATH}"
+
+        sh 'mvn clean package'
+    }
+
+    stage('Test') {
+        sh 'mvn test'
+    }
+
+    stage('Docker Build') {
+        dockerImage = docker.build(
+            'YOUR_DOCKERHUB_USERNAME/oltrs:latest'
+        )
+    }
+
+    stage('Docker Push') {
+        docker.withRegistry(
+            'https://index.docker.io/v1/',
+            'dockerhub-credentials'
+        ) {
+            dockerImage.push()
+        }
+    }
+}
+
+
+
+Replace YOUR_DOCKERHUB_USERNAME.
+Step 3: Configure GitHub Webhook
+Go to:
+
+GitHub → OLTRS → Settings → Webhooks → Add webhook
+
+Set:
+http://<JENKINS-PUBLIC-URL>/github-webhook/
+
+
+Content type:
+application/json
+
+
+Choose push events and enable the webhook.
+
+In Jenkins, enable:
+
+GitHub hook trigger for GITScm polling
+Step 4: Build and verify
+Click:
+
+Build Now
+
+Check:
+
+Console Output
+
+Verify all five stages complete successfully.
+
+Check Docker Hub to confirm that the oltrs:latest image is available.
+
+Q3. Containerization and Deployment using Minikube (25 Marks)
+Step 1: Start Minikube
+minikube start
+
+
+kubectl get nodes
+
+
+Step 2: Create deployment.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: oltrs-deployment
+
+spec:
+  replicas: 4
+
+  selector:
+    matchLabels:
+      app: oltrs
+
+  template:
+    metadata:
+      labels:
+        app: oltrs
+
+    spec:
+      containers:
+        - name: oltrs-container
+          image: YOUR_DOCKERHUB_USERNAME/oltrs:latest
+          imagePullPolicy: Always
+
+          ports:
+            - containerPort: 8080
+
+
+
+Apply:
+kubectl apply -f deployment.yaml
+
+
+Step 3: Create service.yaml
+
+apiVersion: v1
+kind: Service
+
+metadata:
+  name: oltrs-service
+
+spec:
+  type: NodePort
+
+  selector:
+    app: oltrs
+
+  ports:
+    - port: 8080
+      targetPort: 8080
+      nodePort: 30080
+
+
+
+Apply:
+kubectl apply -f service.yaml
+
+
+Step 4: Scale to four replicas
+kubectl scale deployment oltrs-deployment --replicas=4
+
+
+Step 5: Verify Kubernetes resources
+kubectl get nodes
+kubectl get deployments
+kubectl get pods
+kubectl get services
+
+
+Expected: four OLTRS Pods managed by the Deployment.
+Step 6: Access the application
+minikube service oltrs-service --url
+
+
+Open the returned URL followed by:
+/ticket-reservation/
+
+
+Step 7: Cleanup
+kubectl delete -f service.yaml
+kubectl delete -f deployment.yaml
+minikube stop
+
+
+
+Q4. Deployment in AWS Environment using Amazon EC2 (25 Marks)
+Step 1: Launch EC2
+- Select Ubuntu Server.
+- Choose an eligible instance type.
+- Create or select a .pem key pair.
+- Configure a Security Group.
+- Launch the instance.
+Step 2: Security Group inbound rules
+Type	Port	Source
+SSH	22	My IP
+HTTP	80	0.0.0.0/0
+Custom TCP	8080	0.0.0.0/0
+
+Step 3: Connect to EC2
+ssh -i "oltrs-key.pem" ubuntu@<EC2-PUBLIC-IP>
+
+
+Step 4: Install dependencies
+sudo apt update
+sudo apt install git docker.io maven openjdk-17-jdk -y
+
+
+sudo systemctl start docker
+sudo systemctl enable docker
+
+
+Step 5: Clone the repository
+git clone https://github.com/archanareddyse/OLTRS.git
+cd OLTRS
+
+
+Step 6: Build the WAR
+mvn clean package
+
+
+Verify:
+ls target/
+
+
+Expected:
+ticket-reservation.war
+
+
+Step 7: Create Dockerfile
+
+FROM tomcat:9.0-jdk8-temurin
+
+COPY target/ticket-reservation.war /usr/local/tomcat/webapps/ticket-reservation.war
+
+EXPOSE 8080
+
+CMD ["catalina.sh", "run"]
+
+
+
+Step 8: Build and run the container
+sudo docker build -t oltrs-app .
+
+
+sudo docker run -d \
+  --name oltrs-container \
+  -p 8080:8080 \
+  oltrs-app
+
+
+Verify:
+sudo docker ps
+sudo docker logs oltrs-container
+
+
+Step 9: Access OLTRS
+Open:
+http://<EC2-PUBLIC-IP>:8080/ticket-reservation/
+
+
+Step 10: Cleanup
+sudo docker stop oltrs-container
+sudo docker rm oltrs-container
+
+
+Terminate the EC2 instance after the practical.
