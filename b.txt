@@ -1,0 +1,20 @@
+SET-1 to SET-9 – How to open applications
+No.	Application	How to open	Where to work
+1	Jenkins	Chrome → localhost:8080	Browser: Pipelines, Groovy scripts, jobs
+2	Maven	Open VS Code	Terminal: mvn clean package; edit pom.xml
+3	Docker Desktop	Windows Search → Docker Desktop	Docker dashboard and terminal
+4	Nagios	Start container: docker start nagios → localhost:8081	Browser: Monitoring dashboard
+5	Tomcat	Start container: docker start tomcat → localhost:8082	Browser: Deploy WAR applications
+6	WordPress	PowerShell: docker compose up -d	Browser: WordPress dashboard
+7	Minikube	PowerShell: minikube start	Terminal
+8	Kubernetes (kubectl)	VS Code terminal / PowerShell	Commands: kubectl get nodes, etc.
+9	AWS EC2	Chrome → AWS Console	Browser: EC2 dashboard and instance terminal
+10	Git	PowerShell / VS Code terminal	Commands: git clone, git status
+11	GitHub	Chrome → GitHub	Browser: Repositories and webhooks
+
+Docker commands – Nagios and Tomcat
+Task	Nagios	Tomcat
+First-time creation	docker run ... --name nagios ...	docker run ... --name tomcat ...
+Start again	docker start nagios	docker start tomcat
+Stop	docker stop nagios	docker stop tomcat
+Open	localhost:8081	localhost:8082
