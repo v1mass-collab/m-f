@@ -1,0 +1,2797 @@
+Repository: https://github.com/deepthisagar7/library-management.git
+
+set-1:
+Q1. DOCKER – MULTI-CONTAINER APPLICATION (20 MARKS)
+Aim:
+To deploy a Digital Library Portal using WordPress as the frontend and MySQL as the backend with Docker containers, networking and persistent storage.
+
+Step 1: Start Docker Desktop.
+
+Open Docker Desktop and wait until Docker Engine is running.
+
+Verify Docker:
+docker --version
+docker info
+
+
+Step 2: Pull the required images.
+docker pull mysql:8.0
+docker pull wordpress:latest
+
+
+Step 3: Create a custom Docker network.
+docker network create library-network
+
+
+Step 4: Create a persistent volume for MySQL.
+docker volume create library-db-data
+
+
+Step 5: Run the MySQL container.
+docker run -d ^
+--name library-db ^
+--network library-network ^
+-e MYSQL_ROOT_PASSWORD=root123 ^
+-e MYSQL_DATABASE=library ^
+-v library-db-data:/var/lib/mysql ^
+--restart unless-stopped ^
+mysql:8.0
+
+
+Step 6: Run the WordPress container.
+docker run -d ^
+--name library-wordpress ^
+--network library-network ^
+-p 8080:80 ^
+-e WORDPRESS_DB_HOST=library-db:3306 ^
+-e WORDPRESS_DB_USER=root ^
+-e WORDPRESS_DB_PASSWORD=root123 ^
+-e WORDPRESS_DB_NAME=library ^
+--restart unless-stopped ^
+wordpress:latest
+
+
+Step 7: Verify running containers.
+docker ps
+
+
+Both WordPress and MySQL containers should be running.
+
+Step 8: Access WordPress.
+
+Open the browser:
+http://localhost:8080
+
+
+Complete the WordPress installation.
+
+Step 9: Demonstrate container recovery.
+
+Stop MySQL:
+docker stop library-db
+
+
+Restart MySQL:
+docker start library-db
+
+
+Verify:
+docker ps
+
+
+Step 10: Demonstrate database persistence.
+
+Remove the MySQL container:
+docker rm -f library-db
+
+
+Recreate it using the same volume:
+docker run -d ^
+--name library-db ^
+--network library-network ^
+-e MYSQL_ROOT_PASSWORD=root123 ^
+-e MYSQL_DATABASE=library ^
+-v library-db-data:/var/lib/mysql ^
+--restart unless-stopped ^
+mysql:8.0
+
+
+The database files remain stored in the Docker volume.
+
+Expected Output:
+- WordPress website accessible at localhost:8080.
+- MySQL and WordPress running in separate containers.
+- Both containers communicating through a custom network.
+- Database information preserved using a named volume.
+- Containers can be restarted and recovered.
+Scenario-Based Questions:
+
+1. What happens if the MySQL container crashes while WordPress is running?
+
+Answer: WordPress temporarily loses its database connection. Database operations fail until MySQL becomes available again. The restart policy helps restart the MySQL container after certain failures.
+
+2. How can database information be recovered after container deletion?
+
+Answer: Store database files in a Docker volume. Recreate the MySQL container using the same volume.
+
+Command:
+docker volume ls
+
+
+3. Why is a custom Docker network required?
+
+Answer:
+- Allows containers to communicate.
+- Provides container-name-based communication.
+- Provides network isolation.
+- Avoids depending on changing IP addresses.
+4. How would you prevent unauthorized access to MySQL?
+
+Answer:
+- Use strong passwords.
+- Do not expose port 3306 publicly.
+- Use a private Docker network.
+- Create database users with limited privileges.
+- Allow only authorized containers to access the database.
+5. How would you deploy five department websites using Docker?
+
+Answer:
+- Create five WordPress containers.
+- Configure separate databases or separate databases/users in a shared MySQL server.
+- Use persistent volumes.
+- Configure different ports or a reverse proxy.
+- Use Docker networking for communication.
+==================================================
+Q2. JENKINS – JAVA APPLICATION BUILD AND CONTINUOUS INTEGRATION (20 MARKS)
+Aim:
+To configure Jenkins Freestyle Project to clone the Library Management Java application from GitHub, build it using Maven and archive the generated JAR file.
+
+Repository:
+https://github.com/deepthisagar7/library-management.git
+
+
+Step 1: Start Jenkins.
+
+Open:
+http://localhost:8080
+
+
+Log in to Jenkins.
+
+Step 2: Configure JDK and Maven.
+
+Go to:
+
+Manage Jenkins → Tools
+
+Configure:
+- JDK name: JDK17
+- Maven name: Maven3
+Make sure JDK 17 is installed.
+
+Step 3: Install required plugins.
+
+Go to:
+
+Manage Jenkins → Plugins
+
+Install:
+- Git plugin
+- Maven Integration plugin
+- JUnit plugin (optional)
+Step 4: Create a Freestyle Project.
+1. Click New Item.
+2. Enter project name: Library-Management.
+3. Select Freestyle project.
+4. Click OK.
+Step 5: Configure GitHub repository.
+
+Under Source Code Management:
+1. Select Git.
+2. Enter repository URL:
+https://github.com/deepthisagar7/library-management.git
+
+
+3. Enter branch:
+*/main
+
+
+Step 6: Configure build trigger.
+
+Under Build Triggers, select Poll SCM.
+
+Enter:
+H/5 * * * *
+
+
+This checks the GitHub repository approximately every five minutes.
+
+Step 7: Configure Maven build.
+
+Under Build:
+1. Select Invoke top-level Maven targets.
+2. Select the configured Maven installation.
+3. Enter goals:
+clean package
+
+
+Maven performs:
+- Clean previous build files.
+- Compile Java source.
+- Execute available tests.
+- Generate the JAR package.
+Step 8: Archive the generated artifact.
+
+Under Post-build Actions:
+1. Select Archive the artifacts.
+2. Enter:
+target/*.jar
+
+
+Step 9: Save and execute.
+1. Click Save.
+2. Click Build Now.
+3. Open Console Output.
+Expected Output:
+BUILD SUCCESS
+
+
+Generated artifact:
+target/library-management-1.0-SNAPSHOT.jar
+
+
+Step 10: Demonstrate a failed build.
+
+Introduce a temporary Java compilation error in the source code and commit/push the change, or build the modified source manually.
+
+Jenkins should report a compilation failure and mark the build as FAILED.
+
+Restore the original source and rebuild to demonstrate SUCCESS.
+
+Scenario-Based Questions:
+
+1. How does Jenkins identify compilation errors?
+
+Answer: Jenkins executes Maven commands. Maven compiles Java source files. If compilation errors occur, Maven returns a failure status and Jenkins marks the build as FAILED.
+
+2. What happens if compilation succeeds but test cases fail?
+
+Answer: The test phase fails and Maven reports a failure status. Jenkins marks the overall build as FAILED.
+
+Note: The supplied repository does not currently contain visible test source files, so existing unit tests should not be assumed.
+
+3. Why is Maven used instead of manually downloading JAR files?
+
+Answer:
+- Automatically manages dependencies.
+- Compiles Java source code.
+- Executes tests.
+- Packages the application.
+- Makes builds repeatable.
+4. How can Jenkins build only a specific GitHub branch?
+
+Answer: Configure the required branch under Git Branch Specifier.
+
+Example:
+*/main
+
+
+5. What is the difference between Continuous Integration and Continuous Deployment?
+
+Answer:
+
+CI:
+- Developers frequently integrate code.
+- Code is automatically built and tested.
+- Errors are detected early.
+CD:
+- Automates delivery or deployment.
+- Releases tested software.
+- Reduces manual deployment work.
+==================================================
+Q3. KUBERNETES – CONTAINER DEPLOYMENT AND AUTO SCALING (20 MARKS)
+Aim:
+To containerize the actual Library Management Java application and execute it using Kubernetes.
+
+Important:
+The supplied Java application is a console program that prints a menu and exits. It is not a continuously running web service. Therefore, a Kubernetes Job is appropriate for running the actual repository application. The Deployment, Service and scaling requirements in the question need a long-running application.
+
+A. Repository-specific execution
+
+Step 1: Clone the repository.
+git clone https://github.com/deepthisagar7/library-management.git
+
+
+Step 2: Open the project folder.
+cd library-management
+
+
+Step 3: Build the application.
+mvn clean package
+
+
+Step 4: Create a Dockerfile.
+
+Create a file named Dockerfile in the project root.
+FROM eclipse-temurin:17-jdk
+
+WORKDIR /app
+
+COPY target/library-management-1.0-SNAPSHOT.jar app.jar
+
+CMD ["java", "-cp", "app.jar", "com.library.LibraryManagement"]
+
+
+Step 5: Build the Docker image.
+docker build -t library-management .
+
+
+Step 6: Run and test the Docker image.
+docker run --rm library-management
+
+
+Expected output:
+Library Management System
+1. Search Book
+2. Issue Book
+3. Return Book
+4. Reserve Book
+
+
+B. Kubernetes execution
+
+Step 7: Start Minikube.
+minikube start
+
+
+Step 8: Load the Docker image into Minikube.
+minikube image load library-management:latest
+
+
+Step 9: Create a file named library-job.yaml.
+apiVersion: batch/v1
+kind: Job
+
+metadata:
+  name: library-job
+
+spec:
+  template:
+    spec:
+      containers:
+        - name: library-container
+          image: library-management:latest
+          imagePullPolicy: IfNotPresent
+
+      restartPolicy: Never
+
+
+Step 10: Apply the Kubernetes Job.
+kubectl apply -f library-job.yaml
+
+
+Step 11: Verify the Job and pod.
+kubectl get jobs
+kubectl get pods
+
+
+Step 12: View application output.
+kubectl logs job/library-job
+
+
+This demonstrates execution of the actual Java repository inside Kubernetes.
+
+C. Commands for the Deployment requirements in the question
+
+These commands demonstrate the required Kubernetes operations, but a working browser-accessible application requires converting the console program into a long-running web service first.
+
+Step 13: Create a Deployment with two replicas.
+kubectl create deployment library-deployment --image=library-management:latest --replicas=2
+
+
+Step 14: Expose the application.
+kubectl expose deployment library-deployment --type=NodePort --port=80 --target-port=8080
+
+
+Note: The current Java application does not listen on port 8080, so this Service will not provide working browser access.
+
+Step 15: Scale from two to five replicas.
+kubectl scale deployment library-deployment --replicas=5
+
+
+Step 16: Check pods.
+kubectl get pods
+
+
+Step 17: Demonstrate pod recreation.
+kubectl delete pod <pod-name>
+
+
+Check again:
+kubectl get pods
+
+
+The Deployment controller attempts to maintain five replicas.
+
+Step 18: Demonstrate rolling update.
+kubectl set image deployment/library-deployment library-container=library-management:v2
+
+
+Step 19: Check rollout status.
+kubectl rollout status deployment/library-deployment
+
+
+Step 20: Demonstrate rollback.
+kubectl rollout undo deployment/library-deployment
+
+
+Expected Output:
+- Java application packaged into a Docker image.
+- Application executed inside Kubernetes using a Job.
+- Kubernetes Deployment, scaling and rollout commands demonstrated separately.
+- Pod recreation demonstrated using a Deployment.
+Scenario-Based Questions:
+
+1. What happens when one pod crashes?
+
+Answer: Kubernetes detects the failed pod. The Deployment controller creates another pod to maintain the desired replica count.
+
+2. How does Kubernetes maintain the desired number of replicas?
+
+Answer: The Deployment controller continuously compares the actual number of pods with the desired number and creates replacement pods when required.
+
+3. What is the difference between manual scaling and auto scaling?
+
+Answer:
+- Manual scaling: Administrator changes the replica count.
+- Auto scaling: Kubernetes adjusts replicas automatically based on configured metrics, such as CPU utilization, using Horizontal Pod Autoscaler.
+4. Why is a Kubernetes Service required?
+
+Answer:
+- Provides a stable network endpoint.
+- Allows users to access application pods.
+- Distributes traffic across matching pods.
+- Keeps application access stable when pods are replaced.
+5. How can you recover from a failed application update?
+
+Answer: Use the rollback command.
+kubectl rollout undo deployment/library-deployment
+
+
+==================================================
+Q4. NAGIOS – INFRASTRUCTURE AND APPLICATION MONITORING (20 MARKS)
+Aim:
+To install Nagios using Docker and monitor the server and Java Library Management application process.
+
+Important:
+The supplied repository has no HTTP server or MySQL database. Therefore, host and Java-process monitoring can be demonstrated, but actual HTTP and MySQL checks cannot be configured for this repository.
+
+Step 1: Start Docker Desktop.
+
+Wait until Docker Engine is running.
+
+Step 2: Pull the Nagios image.
+docker pull nagios/nagios
+
+
+Step 3: Run the Nagios container.
+docker run -d --name nagios -p 8081:80 nagios/nagios
+
+
+Step 4: Verify the container.
+docker ps
+
+
+Step 5: Open the Nagios dashboard.
+http://localhost:8081
+
+
+Use the credentials configured for the image.
+
+Step 6: Build the Library Management application.
+mvn clean package
+
+
+Step 7: Run the Java application.
+java -cp target/library-management-1.0-SNAPSHOT.jar com.library.LibraryManagement
+
+
+Step 8: Configure process monitoring.
+
+Nagios can use a process-monitoring plugin to check whether the Java application is running.
+
+A basic Linux process check is:
+pgrep -f com.library.LibraryManagement
+
+
+A matching process indicates that the application is running.
+
+Step 9: Configure system resource monitoring.
+
+Use appropriate Nagios plugins:
+- check_load – CPU/system load.
+- Memory monitoring plugin – memory usage.
+- check_disk – disk space.
+- Host/uptime check – server availability.
+- Process monitoring check – Java application process.
+Step 10: Configure WARNING and CRITICAL thresholds.
+
+Example disk check:
+check_disk -w 20% -c 10% -p /
+
+
+WARNING: Free disk space falls below 20%.
+
+CRITICAL: Free disk space falls below 10%.
+
+Step 11: Demonstrate application failure.
+
+Stop the Java application and verify that the process check reports a failure.
+
+Step 12: Demonstrate recovery.
+
+Restart the Java application and verify that the process check reports OK.
+
+Expected Output:
+- Nagios Docker container running.
+- Nagios dashboard accessible.
+- Host and resource monitoring configured.
+- Java process monitoring demonstrated.
+- WARNING and CRITICAL thresholds configured.
+- Failure and recovery demonstrated.
+Scenario-Based Questions:
+
+1. How does Nagios identify high CPU utilization?
+
+Answer: Nagios executes CPU/load monitoring plugins and compares the results against configured thresholds.
+
+2. What is the difference between WARNING and CRITICAL?
+
+Answer:
+- WARNING: Indicates a potential problem requiring attention.
+- CRITICAL: Indicates a serious problem requiring immediate action.
+3. How can Nagios identify application failure when the server is running?
+
+Answer: Configure a process check to identify whether the Java application process is running. The server may be available even if the application process has stopped.
+
+4. What happens if the Nagios monitoring server fails?
+
+Answer: Nagios cannot monitor other systems or generate new alerts while it is unavailable. A separate monitoring system can detect the monitoring server failure.
+
+5. How would you identify whether downtime is caused by Tomcat, MySQL or networking?
+
+Answer:
+- Check Java application process.
+- Check network connectivity.
+- Inspect application logs.
+- Check CPU, memory and disk usage.
+Note: The supplied repository does not contain Tomcat or MySQL components, so those specific checks are not applicable to this project.
+==================================================
+Q5. AWS – CLOUD DEPLOYMENT USING EC2 (20 MARKS)
+Aim:
+To deploy the actual Java Library Management application on an AWS EC2 Ubuntu instance.
+
+The repository generates a JAR file, so we execute it directly using Java. Tomcat is not required for this console application.
+
+Step 1: Open AWS Console.
+https://console.aws.amazon.com/
+
+
+Step 2: Launch an EC2 instance.
+1. Search for EC2.
+2. Click Launch Instance.
+3. Enter name: Library-Management-Server.
+4. Select Ubuntu Server.
+5. Select an eligible instance type.
+6. Create or select a key pair.
+7. Configure the Security Group.
+Step 3: Configure Security Group.
+
+Add the following inbound rule:
+- Type: SSH
+- Port: 22
+- Source: My IP
+For this console application, HTTP and Tomcat ports are not required.
+
+Step 4: Connect to the EC2 instance.
+ssh -i library-key.pem ubuntu@<EC2-PUBLIC-IP>
+
+
+Step 5: Update Ubuntu packages.
+sudo apt update
+sudo apt upgrade -y
+
+
+Step 6: Install Java 17, Git and Maven.
+sudo apt install openjdk-17-jdk git maven -y
+
+
+Step 7: Verify installations.
+java -version
+git --version
+mvn -version
+
+
+Step 8: Clone the Library Management repository.
+git clone https://github.com/deepthisagar7/library-management.git
+
+
+Step 9: Open the project folder.
+cd library-management
+
+
+Step 10: Build the application.
+mvn clean package
+
+
+Step 11: Execute the generated JAR.
+java -cp target/library-management-1.0-SNAPSHOT.jar com.library.LibraryManagement
+
+
+Expected output:
+Library Management System
+1. Search Book
+2. Issue Book
+3. Return Book
+4. Reserve Book
+
+
+Step 12: Verify successful execution.
+
+The application menu should appear in the EC2 terminal.
+
+Expected Output:
+- Ubuntu EC2 instance launched.
+- SSH connection established.
+- Java 17 and Maven installed.
+- GitHub repository cloned.
+- Maven build completed.
+- Java application executed successfully.
+Important:
+The application is console-based, so it does not open in a browser using the EC2 public IP. A web interface would need to be developed separately.
+
+Scenario-Based Questions:
+
+1. What could cause an EC2 application to be inaccessible through a browser?
+
+Answer:
+For this repository, browser access is not supported because it is a console application.
+
+For a web application, possible reasons include:
+- Incorrect public IP.
+- EC2 instance stopped.
+- Security Group blocking the application port.
+- Application process stopped.
+- Firewall blocking requests.
+2. Why should SSH access be restricted?
+
+Answer: SSH provides remote administrative access. Restricting port 22 to authorized IP addresses prevents unauthorized access.
+
+3. What happens if Tomcat stops while EC2 is running?
+
+Answer: EC2 continues running, but applications hosted on Tomcat become unavailable. The supplied repository does not use Tomcat.
+
+4. How can application availability be improved?
+
+Answer:
+- Use multiple EC2 instances.
+- Configure monitoring.
+- Use automated recovery.
+- Maintain backups.
+- Deploy across multiple Availability Zones.
+- Use a load balancer for web applications.
+5. Why would an Application Load Balancer and multiple EC2 instances be better than a single EC2 instance?
+
+Answer:
+- Distributes incoming requests.
+- Improves availability.
+- Handles increased traffic.
+- Reduces dependence on one server.
+- Supports health checks.
+==================================================
+SET-1 COMPLETE
+Repository-specific preparation:
+
+Q1: WordPress + MySQL Docker practical.
+Q2: Jenkins + Maven + JAR generation.
+Q3: Docker image + Kubernetes Job; Deployment requirements need a long-running web application.
+Q4: Nagios + host and Java-process monitoring.
+Q5: Java JAR deployment on Ubuntu EC2.
+
+The most important commands to remember are:
+git clone https://github.com/deepthisagar7/library-management.git
+
+mvn clean package
+
+java -cp target/library-management-1.0-SNAPSHOT.jar com.library.LibraryManagement
+
+docker build -t library-management .
+
+docker run --rm library-management
+
+minikube start
+
+kubectl get pods
+
+docker ps
+
+SET-2:
+
+Repository: https://github.com/deepthisagar7/metro-reservation.git
+
+Q1(a) Docker – Multi-Container Application [20 Marks]
+Aim
+To deploy the Metro Reservation web application and MySQL database in separate Docker containers and establish communication between them.
+Step 1: Start Docker Desktop
+1. Open Docker Desktop.
+2. Wait until the Docker Engine is running.
+3. Open PowerShell or VS Code terminal.
+4. Verify Docker:
+docker --version
+docker ps
+
+
+If docker ps executes without an error, Docker is ready.
+Step 2: Clone the GitHub repository
+git clone https://github.com/deepthisagar7/metro-reservation.git
+
+
+Move into the project:
+cd metro-reservation
+
+
+Check the files:
+dir
+
+
+You should find pom.xml in the project directory.
+Step 3: Build the WAR file using Maven
+Run:
+mvn clean package
+
+
+Explanation:
+- mvn – runs Maven.
+- clean – removes previous build files.
+- package – compiles the application and packages it as a WAR file.
+After a successful build, check:
+dir target
+
+
+Expected output:
+target/
+    metro-reservation.war
+
+
+Important for exam
+ The WAR file is the deployable Java web application package. Tomcat runs this WAR file.
+Step 4: Create a Dockerfile
+Inside the metro-reservation project folder, create a file named:
+Dockerfile
+
+
+Add the following content:
+FROM tomcat:9.0-jdk17-temurin
+
+COPY target/metro-reservation.war /usr/local/tomcat/webapps/metro-reservation.war
+
+EXPOSE 8080
+
+CMD ["catalina.sh", "run"]
+
+
+Explanation:
+Instruction	Purpose
+FROM	Downloads/uses the Tomcat base image with Java 17
+COPY	Copies the WAR file into Tomcat's webapps folder
+EXPOSE	Documents the application's container port
+CMD	Starts the Tomcat server
+
+Note: Tomcat 9 is a practical starting point, but the correct Tomcat version depends on whether the application uses javax.servlet or jakarta.servlet. Verify the application's servlet imports if deployment fails.
+Step 5: Pull the required Docker images
+Pull Tomcat:
+docker pull tomcat:9.0-jdk17-temurin
+
+
+Pull MySQL:
+docker pull mysql:8
+
+
+Verify:
+docker images
+
+
+You should see both images.
+Step 6: Build the Metro Reservation Docker image
+Run this command from the project folder containing the Dockerfile:
+docker build -t metro-reservation:1.0 .
+
+
+Explanation:
+- docker build – creates an image.
+- -t – assigns a name and tag.
+- metro-reservation:1.0 – image name and version.
+- . – uses the current directory as the build context.
+Verify:
+docker images
+
+
+Step 7: Create a Docker network
+The application container and MySQL container need a common network to communicate.
+docker network create metro-network
+
+
+Verify:
+docker network ls
+
+
+Step 8: Create a MySQL container
+This is the database-container example. Use it only if the application actually has MySQL/JDBC configuration, and make the credentials match that configuration.
+docker run -d --name metro-mysql --network metro-network -e MYSQL_ROOT_PASSWORD=MetroRoot123 -e MYSQL_DATABASE=metrodb -v metro-mysql-data:/var/lib/mysql mysql:8
+
+
+Explanation:
+- -d – runs the container in the background.
+- --name – assigns the container name.
+- --network – connects it to the application network.
+- MYSQL_ROOT_PASSWORD – sets the MySQL root password.
+- MYSQL_DATABASE – creates a database.
+- -v – stores database data in a Docker volume.
+Check:
+docker ps
+
+
+Check MySQL logs:
+docker logs metro-mysql
+
+
+Step 9: Run the Metro Reservation application container
+docker run -d --name metro-app --network metro-network -p 8080:8080 metro-reservation:1.0
+
+
+Explanation:
+- -p 8080:8080 maps host port 8080 to container port 8080.
+- metro-reservation:1.0 is the image created earlier.
+Check:
+docker ps
+
+
+Step 10: Access the application
+Open a browser and enter:
+http://localhost:8080/metro-reservation/
+
+
+If Tomcat starts and the WAR deploys successfully, the Metro Reservation application should be accessible.
+
+If the application requires a database, creating the MySQL container alone is not enough. The application's JDBC URL, database name, username and password must also be configured to use the MySQL container hostname metro-mysql rather than localhost.
+Step 11: Verify communication and inspect containers
+docker ps
+
+
+docker network inspect metro-network
+
+
+docker logs metro-app
+
+
+docker logs metro-mysql
+
+
+These commands help verify that the containers are running and attached to the same network.
+Step 12: Demonstrate data persistence
+Stop and remove the MySQL container:
+docker stop metro-mysql
+docker rm metro-mysql
+
+
+Re-create it using the same volume:
+docker run -d --name metro-mysql --network metro-network -e MYSQL_ROOT_PASSWORD=MetroRoot123 -e MYSQL_DATABASE=metrodb -v metro-mysql-data:/var/lib/mysql mysql:8
+
+
+The named volume preserves database files even when the container is deleted.
+
+Important: This demonstrates persistence of the database files. It does not automatically guarantee application reconnection or transaction recovery.
+Expected Output
+- Tomcat and MySQL images are downloaded.
+- Metro Reservation WAR file is generated.
+- Docker image is created.
+- Application and database containers are created separately.
+- Both containers are connected through a Docker network.
+- Application is accessible through the browser, provided its deployment configuration is compatible.
+Scenario-Based Questions and Answers
+1. What happens if the MySQL container stops while passengers are accessing the application?
+- The application may continue running, but database operations will fail.
+- Passengers may not be able to book or retrieve tickets.
+- Restart the MySQL container:
+docker start metro-mysql
+
+
+- Check its logs:
+docker logs metro-mysql
+
+
+2. How can you preserve passenger reservation data even after deleting the MySQL container?
+
+Use a Docker named volume.
+-v metro-mysql-data:/var/lib/mysql
+
+
+The volume stores data independently of the container.
+
+3. Why should the application and database run in separate containers?
+- Independent deployment.
+- Easier maintenance.
+- Independent scaling.
+- Better isolation.
+- Easier database backup and recovery.
+4. How can you prevent unauthorized access to passenger and reservation information?
+- Use strong database passwords.
+- Restrict database network access.
+- Use HTTPS.
+- Apply authentication and authorization.
+- Avoid exposing the MySQL port publicly.
+- Store credentials securely instead of hardcoding them.
+5. How would you troubleshoot the application if it cannot connect to MySQL?
+
+Check:
+docker ps
+
+
+docker logs metro-mysql
+
+
+docker logs metro-app
+
+
+docker network inspect metro-network
+
+
+Verify that:
+- Both containers are running.
+- Both containers are on the same network.
+- The JDBC hostname is metro-mysql, not localhost.
+- Database name, username and password are correct.
+- The MySQL service is ready to accept connections.
+
+
+Q1(b) Jenkins – Freestyle Project [20 Marks]
+Aim
+To create a Jenkins Freestyle Project that fetches the Metro Reservation source code from GitHub, builds it using Maven and generates a WAR file.
+Step 1: Start Jenkins
+If Jenkins is already installed, start it and open:
+http://localhost:8080
+
+
+Log in using your Jenkins credentials.
+
+If Jenkins is running in Docker, verify:
+docker ps
+
+
+If Jenkins uses port 8080, stop it or configure a different port before running the Metro Reservation Tomcat container on host port 8080.
+
+Step 2: Configure JDK 17 in Jenkins
+1. Open Manage Jenkins.
+2. Select Tools.
+3. Find JDK installations.
+4. Add a JDK installation.
+5. Give it the name:
+JDK17
+
+
+6. Configure the JDK 17 installation path if Jenkins does not detect it automatically.
+7. Save.
+You can verify your local Java installation in the terminal:
+java -version
+
+
+Step 3: Configure Maven in Jenkins
+1. Open Manage Jenkins → Tools.
+2. Find Maven installations.
+3. Click Add Maven.
+4. Enter:
+Name: Maven3
+
+
+5. Enable automatic installation if available, or configure the installed Maven path.
+6. Save.
+Step 4: Create a Freestyle Project
+1. Go to the Jenkins dashboard.
+2. Click New Item.
+3. Enter the project name:
+Metro-Reservation-Build
+
+
+4. Select Freestyle project.
+5. Click OK.
+Step 5: Configure the GitHub repository
+Open the project's Configure page.
+
+Under Source Code Management:
+1. Select Git.
+2. Enter the repository URL:
+https://github.com/deepthisagar7/metro-reservation.git
+
+
+3. Under Branch Specifier, enter:
+*/main
+
+
+4. If the repository is public, credentials are generally not required.
+5. Save the configuration.
+Step 6: Configure automatic GitHub change detection
+Under Build Triggers, select:
+
+Poll SCM
+
+Enter:
+H/5 * * * *
+
+
+This makes Jenkins check the Git repository approximately every five minutes.
+
+If a new commit is detected, Jenkins can trigger a build.
+
+For a webhook-based setup, configure a GitHub webhook pointing to the Jenkins webhook endpoint and enable the corresponding GitHub trigger in Jenkins. Poll SCM does not require a webhook.
+Step 7: Configure the Maven build
+Under Build Environment, select the configured JDK if the Jenkins version exposes that option.
+
+Under Build Steps:
+1. Click Add build step.
+2. Select Invoke top-level Maven targets.
+3. Choose:
+Maven Version: Maven3
+
+
+4. In Goals, enter:
+clean package
+
+
+This command compiles the application, runs the configured tests and packages the application as a WAR file.
+Step 8: Save and execute the build
+Click Save.
+
+On the Jenkins project page, click:
+Build Now
+
+
+Wait for the build to finish.
+Step 9: Verify the build result
+Open the latest build number.
+
+Click:
+Console Output
+
+
+A successful Maven build should end with:
+BUILD SUCCESS
+
+
+The generated WAR file should be:
+target/metro-reservation.war
+
+
+If the Jenkins workspace is on the same machine, you can inspect its workspace folder to verify the WAR file.
+Step 10: Archive the WAR file in Jenkins
+To retain the generated WAR as a Jenkins build artifact:
+1. Open Configure.
+2. Find Post-build Actions.
+3. Select Archive the artifacts.
+4. Enter:
+target/*.war
+
+
+5. Save and run the build again.
+
+After a successful build, open the build page and check Artifacts.
+Step 11: Demonstrate a build failure
+For demonstration, introduce a temporary Java compilation error in a source file.
+1. Commit and push the change to GitHub.
+2. Trigger a Jenkins build.
+3. Open Console Output.
+4. Observe the compilation error and failed build status.
+5. Correct the source code.
+6. Commit and push again.
+7. Run the build and verify BUILD SUCCESS.
+Do not leave the intentional error in your final repository.
+Expected Output
+- Jenkins connects to the Metro Reservation GitHub repository.
+- JDK 17 and Maven are configured.
+- Maven executes clean package.
+- Jenkins generates metro-reservation.war.
+- Build status and console output are visible.
+- WAR file is archived as a build artifact.
+Scenario-Based Questions and Answers
+1. What happens if a developer introduces compilation errors into the application?
+
+Maven reports compilation errors and the Jenkins build fails. The WAR file will not be generated successfully.
+
+2. How can Jenkins detect changes made to GitHub?
+
+Jenkins can detect changes through:
+- Poll SCM, which periodically checks the repository.
+- GitHub webhooks, which notify Jenkins when changes are pushed.
+3. What is the difference between generating a WAR file and deploying it on Tomcat?
+- WAR generation packages the application into a deployable file.
+- Deployment places the WAR in Tomcat's webapps directory and runs the application.
+A successful build does not automatically mean that the application is deployed.
+
+4. Why is Maven useful?
+- Manages project dependencies.
+- Compiles Java source code.
+- Runs tests.
+- Packages applications.
+- Provides a standard build process.
+5. How would you troubleshoot a Jenkins build failure caused by an incorrect pom.xml?
+1. Open Jenkins Console Output.
+2. Identify the Maven error.
+3. Check the pom.xml syntax.
+4. Verify dependencies and plugin versions.
+5. Verify Java source and target versions.
+6. Run locally:
+mvn clean package
+
+
+7. Correct the issue, push the change and rebuild in Jenkins.
+
+Q1(c) System Monitoring using Nagios [20 Marks]
+Aim
+To configure Nagios monitoring for the Metro Reservation application server and monitor CPU, memory, disk space, uptime and HTTP availability.
+Step 1: Pull the Nagios Docker image
+Open a terminal and execute:
+docker pull nagios/nagios
+
+
+Step 2: Run the Nagios container
+docker run -d --name nagios -p 8081:80 nagios/nagios
+
+
+Here:
+- -d runs the container in the background.
+- --name nagios assigns the container name.
+- -p 8081:80 maps host port 8081 to container port 80.
+Verify:
+docker ps
+
+
+Step 3: Open the Nagios dashboard
+Open the browser:
+http://localhost:8081
+
+
+Log in using the credentials provided by the image documentation or its startup configuration. Do not assume default credentials if the image configuration differs.
+Step 4: Understand what needs monitoring
+For the Metro Reservation application, the administrator wants to monitor:
+Metric/service	Purpose
+CPU usage	Detect high processor utilization
+Memory	Detect insufficient RAM
+Disk space	Detect low storage
+Uptime	Check whether the server is available
+HTTP	Check whether the web application responds
+
+Important: Running the Nagios container only gives you the monitoring server/dashboard. It does not automatically configure monitoring of your host, Tomcat, MySQL or application. You must configure the appropriate Nagios plugins and host/service definitions.
+Step 5: Identify the application server
+For a local demonstration, the Metro Reservation application may be running on the same computer or on a separate server.
+
+Record the following information:
+Host name: Metro-Application-Server
+IP address: <APPLICATION-SERVER-IP>
+Application URL: http://<APPLICATION-SERVER-IP>:8080/metro-reservation/
+
+
+Replace the placeholders with the actual server details.
+Step 6: Configure host monitoring
+Nagios uses host definitions to identify the machines being monitored.
+
+A typical host definition looks like:
+define host {
+    use             linux-server
+    host_name       metro-server
+    alias           Metro Reservation Server
+    address         <APPLICATION-SERVER-IP>
+}
+
+
+This defines the Metro Reservation server as a monitoring target.
+
+The template linux-server must exist in your Nagios configuration.
+Step 7: Configure HTTP service monitoring
+A typical HTTP service definition looks like:
+define service {
+    use                     generic-service
+    host_name               metro-server
+    service_description     Metro Reservation HTTP
+    check_command           check_http
+}
+
+
+This checks whether the HTTP service responds.
+
+The Nagios host must have the required plugin installed and the service definition must be included in the active configuration.
+Step 8: Configure CPU, memory and disk monitoring
+Nagios can monitor server resource usage using plugins.
+
+Common checks include:
+check_load
+check_disk
+check_procs
+
+
+For remote Linux machines, an agent such as NRPE can be configured to run resource checks on the monitored machine.
+
+Typical monitored metrics:
+- CPU load.
+- Available memory.
+- Free disk space.
+- Running processes.
+- Server uptime.
+The exact commands and thresholds depend on the plugins and monitoring configuration installed.
+Step 9: Verify monitoring in the dashboard
+After adding the host and services:
+1. Validate the Nagios configuration.
+2. Restart or reload Nagios.
+3. Open the dashboard.
+4. Select Hosts to inspect server status.
+5. Select Services to inspect HTTP and resource checks.
+6. Verify whether the checks show OK, WARNING or CRITICAL.
+Step 10: Demonstrate an alert
+For a simple HTTP monitoring demonstration:
+1. Stop the Tomcat application server.
+2. Wait for the next Nagios check.
+3. Observe the HTTP service status.
+4. Restart Tomcat.
+5. Wait for Nagios to check again.
+6. Observe the service return to OK.
+This demonstrates service failure and recovery.
+Expected Output
+- Nagios Docker image is pulled.
+- Nagios container is running.
+- Dashboard is accessible.
+- Metro Reservation server is configured as a host.
+- CPU, memory, disk and uptime checks are configured.
+- HTTP service availability is monitored.
+- Alerts are visible on the dashboard.
+Scenario-Based Questions and Answers
+1. How can Nagios identify whether the application server is running or down?
+
+Nagios performs host availability checks. If the server does not respond to the configured check, Nagios can report it as DOWN.
+
+2. What is the difference between WARNING and CRITICAL alerts?
+- WARNING: A service or resource is approaching an unacceptable condition.
+- CRITICAL: A serious failure or threshold breach has occurred.
+For example, high CPU usage may trigger WARNING first and CRITICAL at a higher configured threshold.
+
+3. What happens if CPU usage reaches 100% during peak ticket reservations?
+- Application response time may increase.
+- Requests may become slow or time out.
+- Users may experience booking failures.
+- Nagios can generate an alert.
+- The administrator can investigate processes and increase available capacity.
+4. How can Nagios identify whether the application is unavailable even when the server is running?
+
+Nagios can use an HTTP service check. The server may be UP, but if Tomcat or the application is not responding, the HTTP check can report a failure.
+
+5. How can an administrator identify whether downtime is caused by Tomcat, MySQL or the server?
+
+Configure separate checks:
+- Host check for server availability.
+- HTTP or process check for Tomcat.
+- MySQL service check for database availability.
+Compare their results and inspect their logs to identify the failing component.
+
+Q1(d) Container Scaling using Kubernetes [20 Marks]
+Aim
+To deploy the Metro Reservation application using Kubernetes, increase the number of application replicas and demonstrate automatic pod recreation.
+Step 1: Start Docker Desktop
+Open Docker Desktop and ensure Docker Engine is running.
+
+Verify:
+docker ps
+
+
+Step 2: Install and verify Minikube and kubectl
+Check whether Minikube is installed:
+minikube version
+
+
+Check kubectl:
+kubectl version --client
+
+
+If both commands work, continue.
+Step 3: Build the WAR file
+Open the Metro Reservation project folder:
+cd metro-reservation
+
+
+Build:
+mvn clean package
+
+
+Verify that the WAR exists:
+target/metro-reservation.war
+
+
+Step 4: Create a Dockerfile
+Create a file named Dockerfile in the project root:
+FROM tomcat:9.0-jdk17-temurin
+
+COPY target/metro-reservation.war /usr/local/tomcat/webapps/metro-reservation.war
+
+EXPOSE 8080
+
+CMD ["catalina.sh", "run"]
+
+
+This image contains Tomcat and the Metro Reservation WAR file.
+Step 5: Start Minikube
+Run:
+minikube start
+
+
+Check the cluster:
+kubectl cluster-info
+
+
+Check the nodes:
+kubectl get nodes
+
+
+Expected: A Minikube node should show Ready.
+Step 6: Build the Docker image
+docker build -t metro-reservation:1.0 .
+
+
+Step 7: Load the image into Minikube
+For a local Minikube cluster, load the image:
+minikube image load metro-reservation:1.0
+
+
+This makes the locally built image available to Kubernetes.
+Step 8: Create a Kubernetes Deployment file
+Create a file named:
+deployment.yaml
+
+
+Add:
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: metro-deployment
+
+spec:
+  replicas: 2
+
+  selector:
+    matchLabels:
+      app: metro
+
+  template:
+    metadata:
+      labels:
+        app: metro
+
+    spec:
+      containers:
+        - name: metro-container
+          image: metro-reservation:1.0
+          imagePullPolicy: IfNotPresent
+
+          ports:
+            - containerPort: 8080
+
+
+Explanation:
+- kind: Deployment – creates a Kubernetes Deployment.
+- replicas: 2 – requests two application pods.
+- labels – identifies the application pods.
+- image – specifies the Docker image.
+- containerPort: 8080 – specifies the Tomcat container port.
+Step 9: Apply the Deployment
+Run:
+kubectl apply -f deployment.yaml
+
+
+Verify:
+kubectl get deployments
+
+
+Check pods:
+kubectl get pods
+
+
+Expected: Two pods should be created.
+Step 10: Create a Kubernetes Service
+Create a file named:
+service.yaml
+
+
+Add:
+apiVersion: v1
+kind: Service
+
+metadata:
+  name: metro-service
+
+spec:
+  type: NodePort
+
+  selector:
+    app: metro
+
+  ports:
+    - port: 8080
+      targetPort: 8080
+      nodePort: 30080
+
+
+Explanation:
+- Service exposes the application.
+- NodePort exposes the service through a port on the Minikube node.
+- selector connects the service to pods with the label app: metro.
+- targetPort is the application container port.
+- nodePort is the externally accessible service port.
+Step 11: Apply the Service
+kubectl apply -f service.yaml
+
+
+Verify:
+kubectl get services
+
+
+Step 12: Access the application
+Run:
+minikube service metro-service --url
+
+
+Copy the URL displayed by Minikube and open it in your browser.
+
+Alternatively, on a setup where the Minikube node IP is reachable:
+http://<MINIKUBE-IP>:30080/metro-reservation/
+
+
+The application should be available if the image, Tomcat deployment and service are correctly configured.
+Step 13: Scale the application
+Initially, we created two replicas.
+
+Now increase the number to four:
+kubectl scale deployment metro-deployment --replicas=4
+
+
+Verify:
+kubectl get deployments
+
+
+kubectl get pods
+
+
+Expected:
+NAME                READY   UP-TO-DATE   AVAILABLE
+metro-deployment    4/4     4            4
+
+
+The exact pod names will be generated by Kubernetes.
+Step 14: Demonstrate automatic pod recreation
+First, list the pods:
+kubectl get pods
+
+
+Copy one pod name.
+
+Delete that pod:
+kubectl delete pod <POD-NAME>
+
+
+Immediately check:
+kubectl get pods
+
+
+Kubernetes detects that the actual number of pods is below the desired number of four and creates a replacement.
+
+This demonstrates self-healing.
+Step 15: View detailed deployment information
+kubectl describe deployment metro-deployment
+
+
+View service details:
+kubectl describe service metro-service
+
+
+View logs of a pod:
+kubectl logs <POD-NAME>
+
+
+Step 16: Clean up the Kubernetes resources
+After the demonstration:
+kubectl delete -f service.yaml
+
+
+kubectl delete -f deployment.yaml
+
+
+Expected Output
+- Docker image is created.
+- Kubernetes Deployment is created.
+- Two application pods are initially running.
+- Deployment is scaled to four replicas.
+- Four pods are visible through kubectl get pods.
+- When one pod is deleted, Kubernetes automatically creates a replacement.
+- Application is exposed through a NodePort Service.
+Scenario-Based Questions and Answers
+1. What happens if one Metro Reservation application pod crashes during ticket booking?
+
+Kubernetes detects that the pod is no longer healthy or available. The Deployment controller attempts to create a replacement pod. An interrupted booking transaction may still need application/database-level recovery.
+
+2. How does Kubernetes maintain the desired number of application replicas?
+
+The Deployment controller continuously compares the desired replica count with the actual number of pods. If a pod is deleted or crashes, Kubernetes attempts to create another one.
+
+3. What is the difference between scaling up and scaling down?
+- Scaling up increases the number of replicas.
+- Scaling down decreases the number of replicas.
+Example:
+kubectl scale deployment metro-deployment --replicas=4
+
+
+This scales up to four replicas.
+kubectl scale deployment metro-deployment --replicas=2
+
+
+This scales down to two replicas.
+
+4. How can increasing the number of replicas help during peak reservation hours?
+- More application instances can handle requests.
+- Workload can be distributed across pods.
+- Application capacity can increase.
+- It can reduce the load on individual application instances.
+Note: Scaling the application does not automatically scale the database or guarantee that the database can handle the additional load.
+
+5. How can Kubernetes distribute incoming requests among multiple application pods?
+
+A Kubernetes Service selects matching pods using labels and provides a stable network endpoint. It distributes connections among the available endpoints.
+
+Q1(e) AWS Deployment using EC2 [20 Marks]
+Aim
+To launch an AWS EC2 instance and deploy the Metro Reservation Java web application so that users can access it using the EC2 public IP address.
+Step 1: Log in to AWS
+1. Open AWS Management Console.
+2. Log in to your AWS account.
+3. Search for EC2.
+4. Open the EC2 dashboard.
+Step 2: Launch an EC2 instance
+1. Click Launch Instance.
+2. Enter the instance name:
+Metro-Reservation-Server
+
+
+3. Select an Ubuntu Server AMI.
+4. Select an instance type eligible for your account's free-tier offer, if available.
+5. Create or select a key pair.
+6. Download the .pem file and keep it safe.
+Step 3: Configure the Security Group
+Create or select a Security Group.
+
+Add these inbound rules:
+Type	Port	Source
+SSH	22	Your IP address
+Custom TCP	8080	Your IP address for testing
+
+For public passenger access, configure an appropriate public HTTP/HTTPS rule and preferably put the application behind a reverse proxy using standard web ports.
+
+Important: Avoid opening SSH or database ports to everyone. Restrict access as much as possible.
+
+Click Launch Instance.
+Step 4: Connect to the EC2 instance
+After the instance reaches the running state:
+1. Select the instance.
+2. Click Connect.
+3. Use the EC2 Instance Connect option if available, or connect using SSH.
+For SSH from a local terminal, use the downloaded key:
+ssh -i "your-key.pem" ubuntu@<EC2-PUBLIC-IP>
+
+
+Replace the key filename and public IP with your actual values.
+Step 5: Update Ubuntu packages
+Inside the EC2 terminal:
+sudo apt update
+
+
+Step 6: Install Java 17, Maven, Git and Docker
+Install Java:
+sudo apt install openjdk-17-jdk -y
+
+
+Install Maven:
+sudo apt install maven -y
+
+
+Install Git:
+sudo apt install git -y
+
+
+Install Docker:
+sudo apt install docker.io -y
+
+
+Start Docker:
+sudo systemctl start docker
+
+
+Enable Docker:
+sudo systemctl enable docker
+
+
+Verify:
+java -version
+
+
+mvn -version
+
+
+git --version
+
+
+docker --version
+
+
+Step 7: Clone the Metro Reservation repository
+git clone https://github.com/deepthisagar7/metro-reservation.git
+
+
+Move into the project:
+cd metro-reservation
+
+
+Step 8: Build the WAR file
+mvn clean package
+
+
+Verify:
+ls target
+
+
+Expected:
+metro-reservation.war
+
+
+Step 9: Create the Dockerfile
+Inside the project folder:
+nano Dockerfile
+
+
+Enter:
+FROM tomcat:9.0-jdk17-temurin
+
+COPY target/metro-reservation.war /usr/local/tomcat/webapps/metro-reservation.war
+
+EXPOSE 8080
+
+CMD ["catalina.sh", "run"]
+
+
+Save the file.
+
+In Nano:
+- Press Ctrl + O.
+- Press Enter.
+- Press Ctrl + X.
+Step 10: Build the Docker image
+sudo docker build -t metro-reservation:1.0 .
+
+
+Verify:
+sudo docker images
+
+
+Step 11: Run the application container
+sudo docker run -d --name metro-app -p 8080:8080 metro-reservation:1.0
+
+
+Verify:
+sudo docker ps
+
+
+Check application logs:
+sudo docker logs metro-app
+
+
+Step 12: Access the application through the public IP
+Open a browser on your computer.
+
+Enter:
+http://<EC2-PUBLIC-IP>:8080/metro-reservation/
+
+
+Replace <EC2-PUBLIC-IP> with the actual public IPv4 address shown in the EC2 console.
+
+If the application is deployed successfully and the Security Group permits the connection, the Metro Reservation application should open.
+Step 13: Troubleshooting
+Check the container:
+sudo docker ps -a
+
+
+Check logs:
+sudo docker logs metro-app
+
+
+Check whether port 8080 is listening:
+sudo ss -tulpn | grep 8080
+
+
+If necessary, restart the container:
+sudo docker restart metro-app
+
+
+Step 14: Stop and clean up
+Stop the container:
+sudo docker stop metro-app
+
+
+Remove it:
+sudo docker rm metro-app
+
+
+When you finish the AWS practical, stop or terminate the EC2 instance as appropriate to avoid unnecessary charges. Also check for attached storage and other billable resources.
+Expected Output
+- EC2 instance is launched.
+- Ubuntu is accessible.
+- Java 17, Maven, Git and Docker are installed.
+- Metro Reservation repository is cloned.
+- Maven generates the WAR file.
+- Docker image and container are created.
+- Application is accessible using the EC2 public IP and application port.
+Scenario-Based Questions and Answers
+1. What could be the reasons if passengers cannot access the application using the EC2 public IP address?
+
+Possible reasons:
+- Incorrect public IP.
+- EC2 instance is stopped.
+- Security Group does not allow the required port.
+- Docker container is stopped.
+- Tomcat is not running.
+- Application deployment failed.
+- Network or routing configuration is incorrect.
+2. Why should HTTP and application server ports be configured in the EC2 Security Group?
+
+Security Groups act as virtual firewalls. They control incoming and outgoing network traffic. The required application port must be allowed for users to access the application.
+
+3. What happens if Tomcat stops while the EC2 instance is still running?
+
+The EC2 machine remains running, but the Java web application becomes unavailable because the application server is stopped. Restart Tomcat or its container to restore service.
+
+4. How can you make the application available if the EC2 instance fails?
+- Deploy the application on multiple EC2 instances.
+- Use an Elastic Load Balancer.
+- Configure health checks.
+- Use Auto Scaling to replace unhealthy instances.
+- Maintain backups and database recovery mechanisms.
+5. What are the advantages of deploying the application on AWS instead of a local server?
+- Access from different geographical locations.
+- Flexible compute capacity.
+- Easier scaling.
+- AWS infrastructure and networking services.
+- Monitoring and backup options.
+- Reduced need to maintain physical server hardware.
+
+
+SET-3:
+
+repo: deepthisagar7/AI-OLMS
+
+Part 1 – Practical steps for all questions
+Q1(a) Docker – Multi-Container Application [20 Marks]
+Aim
+To deploy the AI Online Learning Management System using separate Docker containers for the Java web application and MySQL database.
+Step 1: Start Docker Desktop
+Open Docker Desktop and wait until Docker Engine is running.
+
+Open PowerShell:
+docker --version
+docker ps
+
+
+Step 2: Clone the AI-OLMS repository
+git clone https://github.com/deepthisagar7/AI-OLMS.git
+
+
+Enter the project directory:
+cd AI-OLMS
+
+
+Check the project files:
+dir
+
+
+You should see pom.xml.
+Step 3: Build the Maven project
+Execute:
+mvn clean package
+
+
+Explanation:
+- clean removes previous build output.
+- package compiles the Java application and creates the WAR file.
+Verify:
+dir target
+
+
+Expected file:
+target/ai-olms.war
+
+
+Step 4: Create the Dockerfile
+Inside the project root, create a file named:
+Dockerfile
+
+
+Add:
+FROM tomcat:10.1-jdk17-temurin
+
+COPY target/ai-olms.war /usr/local/tomcat/webapps/ai-olms.war
+
+EXPOSE 8080
+
+CMD ["catalina.sh", "run"]
+
+
+Explanation:
+- FROM selects Tomcat 10.1 with Java 17.
+- COPY copies the WAR into Tomcat's webapps directory.
+- EXPOSE documents port 8080.
+- CMD starts Tomcat.
+Step 5: Pull the Tomcat and MySQL images
+docker pull tomcat:10.1-jdk17-temurin
+
+
+docker pull mysql:8
+
+
+Verify:
+docker images
+
+
+Step 6: Build the AI-OLMS image
+Run from the project root:
+docker build -t ai-olms:1.0 .
+
+
+Verify:
+docker images
+
+
+Step 7: Create a Docker network
+docker network create aiolms-network
+
+
+Verify:
+docker network ls
+
+
+This network allows the application and database containers to communicate.
+Step 8: Create the MySQL container
+Only perform this step if the application's source code actually uses MySQL and you have configured the correct database name and credentials.
+
+Example:
+docker run -d --name aiolms-mysql --network aiolms-network -e MYSQL_ROOT_PASSWORD=CollegeRoot123 -e MYSQL_DATABASE=aiolms -v aiolms-data:/var/lib/mysql mysql:8
+
+
+Explanation:
+Option	Purpose
+-d	Runs container in background
+--name	Names the container
+--network	Connects it to the network
+MYSQL_ROOT_PASSWORD	Sets root password
+MYSQL_DATABASE	Creates database
+-v	Persists database files
+
+Check:
+docker ps
+
+
+View MySQL logs:
+docker logs aiolms-mysql
+
+
+Step 9: Configure application database connectivity
+If the application uses JDBC, its database URL must point to the MySQL container hostname:
+jdbc:mysql://aiolms-mysql:3306/aiolms
+
+
+The username, password and database name must match the actual application configuration.
+
+Remember: Inside the application container, localhost refers to the application container itself, not the MySQL container.
+
+Also, the repository's pom.xml does not show a MySQL connector dependency. If the application requires MySQL, verify that the correct JDBC driver and application configuration are present before expecting database connectivity.
+Step 10: Run the application container
+docker run -d --name aiolms-app --network aiolms-network -p 8080:8080 ai-olms:1.0
+
+
+Verify:
+docker ps
+
+
+View logs:
+docker logs aiolms-app
+
+
+Step 11: Access the application
+Open the browser:
+http://localhost:8080/ai-olms/
+
+
+The application should load if the WAR deploys successfully and its configuration is correct.
+Step 12: Demonstrate database persistence
+The named volume keeps database files even if the container is removed.
+
+Stop and remove the database container:
+docker stop aiolms-mysql
+
+
+docker rm aiolms-mysql
+
+
+Re-create it with the same volume:
+docker run -d --name aiolms-mysql --network aiolms-network -e MYSQL_ROOT_PASSWORD=CollegeRoot123 -e MYSQL_DATABASE=aiolms -v aiolms-data:/var/lib/mysql mysql:8
+
+
+The database files remain in aiolms-data.
+Expected Output
+- Tomcat and MySQL images are pulled.
+- Maven generates ai-olms.war.
+- Docker image is built.
+- Application and database containers are created separately.
+- Containers communicate through a Docker network, if database integration is configured.
+- AI-OLMS is accessed through the browser.
+
+Q1(b) Jenkins – Freestyle Project [20 Marks]
+Aim
+To configure a Jenkins Freestyle Project to fetch the AI-OLMS source code from GitHub and build it using Maven.
+Step 1: Start Jenkins
+Open:
+http://localhost:8080
+
+
+Log in to Jenkins.
+
+If Jenkins is running on port 8080, ensure it does not conflict with your Tomcat application port. You can run one of them on a different host port.
+Step 2: Configure JDK 17
+1. Open Manage Jenkins.
+2. Click Tools.
+3. Find JDK installations.
+4. Click Add JDK.
+5. Enter:
+Name: JDK17
+
+
+6. Configure the JDK 17 path or automatic installation.
+7. Save.
+Verify your local JDK:
+java -version
+
+
+Step 3: Configure Maven
+1. Go to Manage Jenkins → Tools.
+2. Find Maven installations.
+3. Click Add Maven.
+4. Enter:
+Name: Maven3
+
+
+5. Enable automatic installation or specify the Maven installation path.
+6. Save.
+Step 4: Create a Freestyle Project
+1. Open Jenkins Dashboard.
+2. Click New Item.
+3. Enter:
+AI-OLMS-Build
+
+
+4. Select Freestyle project.
+5. Click OK.
+Step 5: Configure GitHub
+Under Source Code Management:
+1. Select Git.
+2. Enter:
+https://github.com/deepthisagar7/AI-OLMS.git
+
+
+3. Set the branch:
+*/main
+
+
+4. Public repositories generally do not require credentials.
+5. Save later after completing the configuration.
+Step 6: Configure GitHub change detection
+Under Build Triggers, select:
+
+Poll SCM
+
+Enter:
+H/5 * * * *
+
+
+Jenkins checks the repository approximately every five minutes and can trigger a build when it detects changes.
+
+Alternatively, configure a GitHub webhook for push-based triggering.
+Step 7: Configure Maven build
+Under Build Steps:
+1. Click Add build step.
+2. Select Invoke top-level Maven targets.
+3. Choose:
+Maven Version: Maven3
+
+
+4. Enter Goals:
+clean package
+
+
+This compiles the application and generates the WAR file.
+Step 8: Save and build
+Click Save.
+
+On the project page, click:
+Build Now
+
+
+Step 9: Verify the build
+Click the latest build number.
+
+Open:
+Console Output
+
+
+Successful build should show:
+BUILD SUCCESS
+
+
+The expected WAR file is:
+target/ai-olms.war
+
+
+Step 10: Archive the WAR file
+1. Open Configure.
+2. Go to Post-build Actions.
+3. Select Archive the artifacts.
+4. Enter:
+target/*.war
+
+
+5. Save and run another build.
+
+After success, the WAR file will be available under the build's Artifacts section.
+Expected Output
+- Jenkins connects to the AI-OLMS GitHub repository.
+- JDK 17 and Maven are configured.
+- Maven executes clean package.
+- ai-olms.war is generated.
+- Jenkins displays the build status and console output.
+
+Q1(c) System Monitoring using Nagios [20 Marks]
+Aim
+To configure Nagios to monitor the AI-OLMS application server's CPU, memory, uptime and HTTP service availability.
+Step 1: Pull the Nagios image
+docker pull nagios/nagios
+
+
+Step 2: Run the Nagios container
+docker run -d --name nagios -p 8081:80 nagios/nagios
+
+
+Verify:
+docker ps
+
+
+Step 3: Open the Nagios dashboard
+Open:
+http://localhost:8081
+
+
+Log in using the credentials provided by the image's documentation or startup configuration.
+Step 4: Identify the AI-OLMS application server
+For a local practical, note the server address:
+Host name: AI-OLMS-Server
+IP address: <APPLICATION-SERVER-IP>
+Application URL: http://<APPLICATION-SERVER-IP>:8080/ai-olms/
+
+
+Replace the placeholder with the actual address.
+Step 5: Configure host monitoring
+Nagios uses a host definition to identify the server.
+
+Example:
+define host {
+    use             linux-server
+    host_name       aiolms-server
+    alias           AI-OLMS Application Server
+    address         <APPLICATION-SERVER-IP>
+}
+
+
+This identifies the AI-OLMS server as a monitoring target.
+Step 6: Configure HTTP monitoring
+Add an HTTP service definition:
+define service {
+    use                     generic-service
+    host_name               aiolms-server
+    service_description     AI-OLMS HTTP
+    check_command           check_http
+}
+
+
+This checks whether the web server responds to HTTP requests.
+
+The required Nagios plugin and configuration templates must be installed.
+Step 7: Configure CPU, memory and disk monitoring
+Nagios uses plugins to monitor server resources.
+
+Common checks include:
+check_load
+check_disk
+check_procs
+
+
+For remote Linux servers, configure an agent such as NRPE to run resource checks on the monitored machine.
+
+Monitor:
+- CPU load.
+- Memory usage.
+- Disk space.
+- Running processes.
+- Server uptime.
+Step 8: Verify monitoring
+1. Validate the Nagios configuration.
+2. Reload or restart Nagios.
+3. Open the dashboard.
+4. Select Hosts.
+5. Select Services.
+6. Check the AI-OLMS server and its services.
+Step 9: Demonstrate an HTTP failure
+1. Stop the Tomcat application container:
+docker stop aiolms-app
+
+
+2. Wait for the Nagios HTTP check.
+3. Observe the service failure.
+4. Restart the container:
+docker start aiolms-app
+
+
+5. Wait for the next check.
+6. Verify that the HTTP service returns to OK.
+Important: Running the Nagios image alone does not automatically monitor your server. You must configure host definitions, service definitions and the required plugins.
+Expected Output
+- Nagios image is downloaded.
+- Nagios container is running.
+- Dashboard is accessible.
+- AI-OLMS server is configured.
+- CPU, memory, uptime and HTTP checks are configured.
+- Alerts appear when a monitored service fails.
+
+Q1(d) Container Scaling using Kubernetes [20 Marks]
+Aim
+To deploy AI-OLMS using Kubernetes and increase the number of application pods to handle simultaneous student requests.
+Step 1: Start Docker Desktop
+Open Docker Desktop and ensure Docker Engine is running.
+
+Verify:
+docker ps
+
+
+Step 2: Verify Kubernetes tools
+minikube version
+
+
+kubectl version --client
+
+
+Step 3: Build the WAR file
+Clone the repository if you haven't already:
+git clone https://github.com/deepthisagar7/AI-OLMS.git
+
+
+Enter the directory:
+cd AI-OLMS
+
+
+Build:
+mvn clean package
+
+
+Expected:
+target/ai-olms.war
+
+
+Step 4: Create the Dockerfile
+Create Dockerfile:
+FROM tomcat:10.1-jdk17-temurin
+
+COPY target/ai-olms.war /usr/local/tomcat/webapps/ai-olms.war
+
+EXPOSE 8080
+
+CMD ["catalina.sh", "run"]
+
+
+Step 5: Start Minikube
+minikube start
+
+
+Check:
+kubectl cluster-info
+
+
+kubectl get nodes
+
+
+The Minikube node should show Ready.
+Step 6: Build the Docker image
+docker build -t ai-olms:1.0 .
+
+
+Step 7: Load the image into Minikube
+minikube image load ai-olms:1.0
+
+
+This makes the image available to the Minikube cluster.
+Step 8: Create the Deployment YAML file
+Create:
+deployment.yaml
+
+
+Add:
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: aiolms-deployment
+
+spec:
+  replicas: 2
+
+  selector:
+    matchLabels:
+      app: aiolms
+
+  template:
+    metadata:
+      labels:
+        app: aiolms
+
+    spec:
+      containers:
+        - name: aiolms-container
+          image: ai-olms:1.0
+          imagePullPolicy: IfNotPresent
+
+          ports:
+            - containerPort: 8080
+
+
+Explanation:
+- Deployment creates and manages application pods.
+- replicas: 2 requests two pods.
+- labels identify the application pods.
+- image specifies the Docker image.
+- containerPort specifies the Tomcat port.
+Step 9: Apply the Deployment
+kubectl apply -f deployment.yaml
+
+
+Check:
+kubectl get deployments
+
+
+Check pods:
+kubectl get pods
+
+
+Expected: Two pods should be created.
+Step 10: Create a Service YAML file
+Create:
+service.yaml
+
+
+Add:
+apiVersion: v1
+kind: Service
+
+metadata:
+  name: aiolms-service
+
+spec:
+  type: NodePort
+
+  selector:
+    app: aiolms
+
+  ports:
+    - port: 8080
+      targetPort: 8080
+      nodePort: 30080
+
+
+Explanation:
+- Service provides a stable access point.
+- NodePort exposes the application through a node port.
+- selector connects the Service to the AI-OLMS pods.
+- targetPort is the Tomcat port.
+- nodePort is the externally accessible port.
+Step 11: Apply the Service
+kubectl apply -f service.yaml
+
+
+Verify:
+kubectl get services
+
+
+Step 12: Access the application
+Run:
+minikube service aiolms-service --url
+
+
+Open the URL displayed in the browser.
+
+The application URL should end with:
+/ai-olms/
+
+
+Step 13: Scale the deployment
+Initially, two replicas were created.
+
+Increase to four:
+kubectl scale deployment aiolms-deployment --replicas=4
+
+
+Verify:
+kubectl get deployments
+
+
+kubectl get pods
+
+
+Expected: Four AI-OLMS pods.
+Step 14: Demonstrate automatic pod recreation
+List the pods:
+kubectl get pods
+
+
+Copy one pod name and delete it:
+kubectl delete pod <POD-NAME>
+
+
+Check again:
+kubectl get pods
+
+
+Kubernetes detects that one pod is missing and creates a replacement to maintain four replicas.
+Step 15: View details
+kubectl describe deployment aiolms-deployment
+
+
+kubectl describe service aiolms-service
+
+
+kubectl logs <POD-NAME>
+
+
+Step 16: Clean up
+kubectl delete -f service.yaml
+
+
+kubectl delete -f deployment.yaml
+
+
+Expected Output
+- Docker image is created.
+- Kubernetes Deployment is created.
+- Two pods are initially running.
+- Deployment is scaled to four replicas.
+- Four pods are visible using kubectl get pods.
+- Deleting one pod triggers automatic recreation.
+- Application is exposed through a NodePort Service.
+
+Q1(e) AWS Deployment using EC2 [20 Marks]
+Aim
+To deploy the AI-OLMS Java web application on an AWS EC2 instance and access it through the public IP address.
+Step 1: Log in to AWS
+Open AWS Management Console.
+
+Search for EC2 and open the EC2 dashboard.
+Step 2: Launch an EC2 instance
+1. Click Launch Instance.
+2. Enter:
+AI-OLMS-Server
+
+
+3. Select Ubuntu Server.
+4. Select an instance type eligible for your account's offer.
+5. Create or select a key pair.
+6. Download the .pem file.
+7. Launch the instance.
+Step 3: Configure the Security Group
+Add inbound rules:
+Type	Port	Source
+SSH	22	Your IP
+Custom TCP	8080	Your IP for testing
+
+For public web access, configure appropriate HTTP/HTTPS rules. Do not expose SSH or database ports unnecessarily.
+Step 4: Connect to EC2
+After the instance starts, connect using EC2 Instance Connect if available.
+
+Alternatively, from your local terminal:
+ssh -i "your-key.pem" ubuntu@<EC2-PUBLIC-IP>
+
+
+Replace the key filename and public IP with your actual values.
+Step 5: Update Ubuntu
+sudo apt update
+
+
+Step 6: Install Java, Maven, Git and Docker
+sudo apt install openjdk-17-jdk -y
+
+
+sudo apt install maven -y
+
+
+sudo apt install git -y
+
+
+sudo apt install docker.io -y
+
+
+Start Docker:
+sudo systemctl start docker
+
+
+Enable Docker:
+sudo systemctl enable docker
+
+
+Verify:
+java -version
+
+
+mvn -version
+
+
+git --version
+
+
+docker --version
+
+
+Step 7: Clone the AI-OLMS repository
+git clone https://github.com/deepthisagar7/AI-OLMS.git
+
+
+Enter the directory:
+cd AI-OLMS
+
+
+Step 8: Build the WAR file
+mvn clean package
+
+
+Verify:
+ls target
+
+
+Expected:
+ai-olms.war
+
+
+Step 9: Create the Dockerfile
+nano Dockerfile
+
+
+Enter:
+FROM tomcat:10.1-jdk17-temurin
+
+COPY target/ai-olms.war /usr/local/tomcat/webapps/ai-olms.war
+
+EXPOSE 8080
+
+CMD ["catalina.sh", "run"]
+
+
+Save:
+- Ctrl + O
+- Enter
+- Ctrl + X
+Step 10: Build the Docker image
+sudo docker build -t ai-olms:1.0 .
+
+
+Verify:
+sudo docker images
+
+
+Step 11: Run the application
+sudo docker run -d --name aiolms-app -p 8080:8080 ai-olms:1.0
+
+
+Verify:
+sudo docker ps
+
+
+Check logs:
+sudo docker logs aiolms-app
+
+
+Step 12: Access the application
+Open the browser:
+http://<EC2-PUBLIC-IP>:8080/ai-olms/
+
+
+Replace the placeholder with the EC2 instance's public IPv4 address.
+
+The application should load if Tomcat deployment is successful and the Security Group allows the connection.
+Step 13: Troubleshooting
+Check container status:
+sudo docker ps -a
+
+
+Check logs:
+sudo docker logs aiolms-app
+
+
+Check port:
+sudo ss -tulpn | grep 8080
+
+
+Restart the application:
+sudo docker restart aiolms-app
+
+
+Step 14: Cleanup
+sudo docker stop aiolms-app
+
+
+sudo docker rm aiolms-app
+
+
+When finished, stop or terminate the EC2 instance as appropriate and check for other billable resources.
+Expected Output
+- EC2 instance is launched.
+- Ubuntu is accessible.
+- Java 17, Maven, Git and Docker are installed.
+- AI-OLMS repository is cloned.
+- WAR file is generated.
+- Docker image and container are created.
+- Application is accessible using the EC2 public IP.
+
+Part 2 – Scenario-Based Questions and Answers
+Q1(a) Docker – Multi-Container Application
+1. What happens if the MySQL container stops while students are accessing the AI-OLMS portal?
+- The AI-OLMS application container may continue running.
+- Database operations such as login, course retrieval and enrolment may fail.
+- Students may experience errors or failed requests.
+- Restart MySQL:
+docker start aiolms-mysql
+
+
+- Check its logs:
+docker logs aiolms-mysql
+
+
+2. How can you preserve student and course information even after deleting the MySQL container?
+
+Use a Docker named volume.
+-v aiolms-data:/var/lib/mysql
+
+
+The volume stores database data independently of the container. Even if the container is deleted, the data remains in the volume.
+
+3. Why should AI-OLMS and MySQL run in separate containers?
+- Independent deployment.
+- Easier maintenance.
+- Better isolation.
+- Independent scaling.
+- Easier database backup and recovery.
+- Application and database can use different images and configurations.
+4. How can you protect student login credentials and course information from unauthorized access?
+- Use strong database passwords.
+- Implement authentication and authorization.
+- Use HTTPS to encrypt communication.
+- Restrict database network access.
+- Do not expose the MySQL port publicly.
+- Store passwords securely using hashing.
+- Avoid hardcoding database credentials in source code.
+5. How would you troubleshoot the application if it cannot connect to MySQL?
+
+Check whether both containers are running:
+docker ps
+
+
+Check MySQL logs:
+docker logs aiolms-mysql
+
+
+Check application logs:
+docker logs aiolms-app
+
+
+Check network:
+docker network inspect aiolms-network
+
+
+Verify:
+- Both containers belong to the same Docker network.
+- The JDBC hostname is aiolms-mysql, not localhost.
+- Database name and credentials are correct.
+- MySQL is ready to accept connections.
+- The application has the correct MySQL JDBC driver and configuration.
+
+Q1(b) Jenkins – Freestyle Project
+1. What happens if a developer introduces compilation errors in the AI-OLMS application?
+- Jenkins fetches the updated source code.
+- Maven attempts to compile the application.
+- Compilation errors are displayed in Console Output.
+- The build fails.
+- A valid WAR file is not generated.
+2. How can Jenkins automatically detect changes in the GitHub repository?
+
+Jenkins can use:
+- Poll SCM: Periodically checks the GitHub repository for changes.
+- GitHub Webhook: GitHub notifies Jenkins whenever a developer pushes changes.
+Example Poll SCM schedule:
+H/5 * * * *
+
+
+3. What is the difference between generating the WAR file and deploying the application on Tomcat?
+WAR generation	Tomcat deployment
+Packages the application	Runs the application
+Done by Maven	Done by Tomcat
+Produces ai-olms.war	Makes the application accessible
+Build activity	Deployment activity
+
+4. Why is Maven useful for managing dependencies in AI-OLMS?
+- Downloads required dependencies.
+- Manages dependency versions.
+- Compiles Java code.
+- Runs tests.
+- Packages the application into a WAR file.
+- Provides a standard and repeatable build process.
+5. How would you identify and resolve a failed Jenkins build?
+1. Open Jenkins Dashboard.
+2. Select the failed build.
+3. Open Console Output.
+4. Identify the error.
+5. Check Java version and Maven configuration.
+6. Check pom.xml and dependencies.
+7. Run the build locally:
+mvn clean package
+
+
+8. Correct the problem.
+9. Push the corrected code to GitHub.
+10. Run Jenkins again and verify BUILD SUCCESS.
+
+Q1(c) System Monitoring using Nagios
+1. How can Nagios identify whether the AI-OLMS application server is running or down?
+
+Nagios performs host availability checks.
+- If the server responds, it can report the host as UP.
+- If the server does not respond, it can report the host as DOWN.
+2. What is the difference between WARNING and CRITICAL alerts?
+WARNING	CRITICAL
+Indicates a potential problem	Indicates a serious problem
+Resource may be nearing a limit	Resource may have crossed a critical limit
+Requires attention	Requires immediate action
+
+Example: CPU usage may trigger WARNING at a configured threshold and CRITICAL at a higher threshold.
+
+3. What happens if CPU usage reaches 100% when many students access the portal?
+- Application response becomes slow.
+- Requests may time out.
+- Students may face login or examination problems.
+- Server performance decreases.
+- Nagios can generate a CRITICAL alert.
+- The administrator can investigate processes or increase server capacity.
+4. How can Nagios detect application failure even when the server is running?
+
+Nagios can use HTTP service monitoring.
+
+For example:
+- Server is running.
+- Tomcat has stopped.
+- HTTP check fails.
+- Nagios reports the application service as CRITICAL.
+This helps distinguish server availability from application availability.
+
+5. How can an administrator identify whether a problem is caused by Tomcat, MySQL or the server?
+
+Configure separate monitoring checks:
+Component	Monitoring check
+Server	Host availability
+Tomcat	HTTP and process checks
+MySQL	MySQL service check
+
+Compare the monitoring results and inspect the logs to identify the failing component.
+
+Q1(d) Container Scaling using Kubernetes
+1. What happens if one AI-OLMS application pod crashes during an online examination?
+- Kubernetes detects the failed pod.
+- The Deployment controller attempts to create a replacement.
+- The desired number of replicas is maintained.
+- The application can continue serving requests through healthy pods.
+However, an interrupted examination submission may still need application-level recovery and database transaction handling.
+
+2. How does Kubernetes maintain the desired number of application replicas?
+
+Kubernetes uses a Deployment controller.
+
+For example, if the desired number is four but only three pods are running, Kubernetes creates another pod.
+
+Command:
+kubectl get pods
+
+
+3. What is the difference between scaling up and scaling down?
+- Scaling up increases the number of application instances.
+- Scaling down decreases the number of application instances.
+Scale up:
+kubectl scale deployment aiolms-deployment --replicas=4
+
+
+Scale down:
+kubectl scale deployment aiolms-deployment --replicas=2
+
+
+4. How can increasing application replicas improve performance during online examinations?
+- More application instances can process requests.
+- Workload is distributed across multiple pods.
+- Individual pods may experience less load.
+- Application capacity increases during peak periods.
+- The chance of one instance becoming a bottleneck can be reduced.
+5. How does a Kubernetes Service distribute incoming requests among multiple application pods?
+- A Service selects pods using labels.
+- It provides a stable network endpoint.
+- It distributes connections among available pod endpoints.
+- If one pod becomes unavailable, it can stop receiving new traffic through the Service once its endpoint is removed.
+
+Q1(e) AWS Deployment using EC2
+1. What could be the reasons if students cannot access the AI-OLMS application using the EC2 public IP address?
+
+Possible reasons:
+- EC2 instance is stopped.
+- Incorrect public IP address.
+- Security Group does not allow port 8080.
+- Docker container is stopped.
+- Tomcat is not running.
+- WAR deployment failed.
+- Network configuration is incorrect.
+Check:
+sudo docker ps -a
+
+
+2. Why should HTTP and Tomcat ports be configured in the EC2 Security Group?
+
+Security Groups act as virtual firewalls.
+
+They control incoming and outgoing network traffic. The required ports must be allowed so that students can access the application.
+
+For example:
+- Port 80 – HTTP.
+- Port 443 – HTTPS.
+- Port 8080 – Tomcat's default application port.
+3. What happens if Tomcat stops while the EC2 instance is still running?
+- EC2 remains in the running state.
+- The Java application becomes unavailable.
+- Students cannot access the AI-OLMS portal.
+- The administrator must restart Tomcat or the Docker container.
+4. How can you make the AI-OLMS application available if the EC2 instance fails?
+- Deploy the application on multiple EC2 instances.
+- Use an Elastic Load Balancer.
+- Configure health checks.
+- Use Auto Scaling to replace unhealthy instances.
+- Maintain database backups and recovery mechanisms.
+5. What are the advantages of deploying AI-OLMS on AWS instead of a local server?
+- Students can access the portal from anywhere.
+- Compute capacity can be increased when required.
+- Easier infrastructure scaling.
+- AWS provides storage, networking and monitoring services.
+- Backup and recovery options are available.
+- Less need to maintain physical server hardware.
