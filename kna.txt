@@ -1,0 +1,373 @@
+EXP. 10: Working with minikube and Nagios
+Steps & Commands (Copy-Ready)
+1. Download, Configure PATH, and Start Minikube
+curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-installer.exe
+.\minikube-installer.exe
+minikube start --driver=hyperv
+minikube start --driver=docker
+minikube status
+```[cite: 123]
+
+#### 2. Verify and Interact with Minikube & `kubectl`
+```powershell
+minikube kubectl -- get pods -A
+minikube dashboard
+kubectl get nodes
+kubectl version --client
+minikube logs
+minikube update-check
+minikube update
+minikube start
+```[cite: 124]
+
+#### 3. Create, Expose, Scale, and Access Nginx Deployment
+```powershell
+kubectl create deployment mynginx --image=nginx
+kubectl set image deployment/mynginx nginx=nginx:latest
+kubectl get deployments
+kubectl get pods
+kubectl describe pods
+kubectl expose deployment mynginx --type=NodePort --port=80 --target-port=80
+kubectl scale deployment mynginx --replicas=4
+kubectl get service myngnix
+kubectl port-forward svc/mynginx 8081:80
+minikube tunnel
+minikube service mynginx --url
+```[cite: 125, 126]
+
+#### 4. Stop and Clean Up Minikube
+```powershell
+kubectl delete deployment mynginx
+kubectl delete service mynginx
+minikube stop
+minikube delete
+```[cite: 127, 128]
+
+#### 5. Nagios in Docker (Pull, Run, Access, Stop, Remove)
+```powershell
+docker pull jasonrivers/nagios:latest
+docker run -d --name nagiosdemo -p 8888:80 jasonrivers/nagios:latest
+docker stop nagiosdemo
+docker rm nagiosdemo
+docker images
+docker rmi jasonrivers/nagios:latest
+
+Access http://localhost:8888 (Username: nagiosadmin, Password: nagios) and explore Hosts, Services, and Alerts.
+
+6. Steps for AWS Free-Tier Account Creation
+Open [https://aws.amazon.com](https://aws.amazon.com) and click Create AWS Account.
+
+Enter email ID and name details, then enter the verification code sent to your email.
+
+Fill in contact details, agree to Terms and conditions, and click Create.
+
+Enter billing details, click Verify and continue (a ₹2 charge is placed and credited back after verification).
+
+Select country, enter working mobile number, click Send SMS, and enter the mobile verification code.
+
+Select the Basic plan and click Complete sign up.
+
+Click AWS Management Console, select role as Academic/Researcher and interest as DevOps, click Submit, and sign in as Root user.
+
+SBQ’s (Scenario-Based Questions)
+Q1. Your Pod keeps restarting repeatedly. What will you do?
+A1.Check pod details with kubectl describe pod <name> and logs with kubectl logs <name>. Common causes are app crash, wrong image, liveness probe failure, or resource limits. Fix the image/config or adjust probes and resource limits, then redeploy.
+```[cite: 132]
+
+**Q2.** A Kubernetes pod is stuck in a "Pending" state. What could be the possible reasons, and how would you troubleshoot it?
+**A2.**
+```text
+Reasons include insufficient CPU/memory, no available node, unscheduled PVC, or node taints. Run kubectl describe pod <name> and check the Events section at the bottom. Fix by freeing resources, adding nodes, or removing taints/affinity rules.
+```[cite: 132]
+
+**Q3.** How would you debug a failed deployment in Kubernetes?
+**A3.**
+```text
+Run kubectl get deployments and kubectl describe deployment <name> to check status and events. Then use kubectl get pods, kubectl describe pod, and kubectl logs to find the root cause. Fix the image, config, or resource issue and re-apply the deployment.
+```[cite: 132]
+
+**Q4.** You have a Kubernetes Deployment with multiple replicas, and some pods are failing health checks. How would you identify the root cause and fix it?
+**A4.**
+```text
+Run kubectl describe pod <name> and look at Liveness/Readiness probe failures in Events. Check app logs with kubectl logs and verify the health endpoint path and port. Fix the probe config (path, port, delay) or the application itself.
+```[cite: 132]
+
+**Q5.** How do you roll back a faulty deployment?
+**A5.**
+```text
+Use kubectl rollout history deployment/<name> to see revisions. Then run kubectl rollout undo deployment/<name> to roll back to the previous version. You can also target a specific revision with --to-revision=N.
+```[cite: 132]
+
+**Q6.** How do you debug a running Pod?
+**A6.**
+```text
+Use kubectl exec -it <pod-name> -- /bin/bash to get a shell inside the container. Use kubectl logs <pod-name> to view logs and kubectl describe pod <pod-name> for events. Also check resource usage with kubectl top pod.
+```[cite: 132]
+
+**Q7.** You need to expose a local service externally. How to do?
+**A7.**
+```text
+Use kubectl expose deployment <name> --type=NodePort --port=80 --target-port=80. For quick local access, use kubectl port-forward svc/<name> 8081:80. For cloud, use a LoadBalancer service type.
+```[cite: 132, 133]
+
+**Q8.** How to start and stop Nagios?
+**A8.**
+```text
+If running in Docker: docker start nagiosdemo and docker stop nagiosdemo. If installed natively: systemctl start nagios and systemctl stop nagios. Verify status with docker ps or systemctl status nagios.
+```[cite: 133]
+
+**Q9.** You installed Nagios but the web interface shows "Unable to connect to Nagios process". How to resolve this?
+**A9.**
+```text
+Check if the Nagios service is running with systemctl status nagios or docker ps. Verify the Nagios config with nagios -v /etc/nagios/nagios.cfg and fix any errors. Restart the service and check port 80/8888 availability.
+```[cite: 133]
+
+**Q10.** You added a new host in Nagios, but it's not appearing on the web interface. How to check?
+**A10.**
+```text
+Verify the host entry is added correctly in the config files (e.g., hosts.cfg). Run nagios -v nagios.cfg to validate config, then reload Nagios. Check the Nagios log for config parse errors.
+```[cite: 133]
+
+**Q11.** How can you check whether Nagios is running properly?
+**A11.**
+```text
+Run docker ps (for Docker) or systemctl status nagios (native) to check service status. Access the web UI at http://localhost:8888 and verify hosts/services are green. Also check logs with docker logs nagiosdemo or /var/log/nagios/nagios.log.
+```[cite: 133]
+
+**Q12.** How do you view Nagios logs in real-time?
+**A12.**
+```text
+For Docker: docker logs -f nagiosdemo. For native install: tail -f /var/log/nagios/nagios.log. Look for alerts, host checks, and config errors in the output.
+```[cite: 133]
+
+**Q13.** What are the advantages of using Nagios?
+**A13.**
+```text
+Nagios is open-source, plugin-based, and monitors servers, networks, apps, and services in real time. It provides alerts via email/SMS and supports custom checks and distributed monitoring. It is scalable, reliable, and widely used in enterprise IT environments.
+```[cite: 133]
+
+EXP. 11: Jenkins-CI/CD
+Steps & Commands (Copy-Ready)
+1. Configure GitHub Webhook & ngrok
+In GitHub repository: Settings > Webhooks > Add webhook:
+
+Payload URL: http://<jenkins-server-url>/github-webhook/ (or via ngrok, e.g., [https://wintry-gloryingly-nam.ngrok-free.dev/github-webhook/](https://wintry-gloryingly-nam.ngrok-free.dev/github-webhook/))
+
+Content type: application/json
+
+Events: Just the push event
+
+Click Add webhook.
+
+In Jenkins job: Configure > Build Triggers > check GitHub hook trigger for GITScm polling > Save.
+
+ngrok commands:
+ngrok config add-authtoken <your_token>
+ngrok http 8080
+```[cite: 136, 137, 138, 139]
+
+#### 2. Set Up Gmail App Password & Email Notification Plugin
+1. In Google Account (`[https://myaccount.google.com](https://myaccount.google.com)`): **Security > 2-Step Verification** (turn ON) -> **Security > App passwords** -> App: `Other (Custom name)`, Name: `Jenkins-Demo` -> **Generate** and copy the 16-digit app password.
+2. In Jenkins: **Manage Jenkins > Manage Plugins** -> install **Email Extension Plugin**.
+3. Under **Manage Jenkins > Configure System**:
+   * **E-mail Notification:**
+     * SMTP Server: `smtp.gmail.com`
+     * Use SMTP Auth: Enabled
+     * User Name: Your Gmail ID (e.g., `archanareddykmit@gmail.com`)
+     * Password: 16-digit App Password
+     * Use SSL: Enabled
+     * SMTP Port: `465`
+     * Reply-To Address: Your Gmail ID
+   * **Extended E-mail Notification:**
+     * SMTP Server: `smtp.gmail.com`
+     * SMTP Port: `465`
+     * Use SSL: Enabled
+     * Credentials: Gmail ID and App Password in Jenkins credentials
+     * Default Content Type: `text/html` (or default)
+     * Default Recipients & Triggers: configure as needed (e.g., `Failure`)
+4. In a Jenkins job: **Configure > Post-build Actions > Add post-build action > Editable Email Notification** -> set Project Recipient List, Content Type, Triggers (e.g., `Failure`, `Success`), and optional Attachments -> **Save**[cite: 139, 140, 141, 142, 143, 144].
+
+---
+
+### Viva Questions
+
+**Q1.** What is Continuous Integration (CI)?
+**A1.**
+```text
+CI is a development practice where developers merge code changes into a shared repository frequently. Each merge automatically triggers a build and test process. This helps detect bugs early and ensures the code always stays in a working state.
+```[cite: 144, 145]
+
+**Q2.** What is Continuous Deployment or Continuous Delivery (CD)?
+**A2.**
+```text
+CD is the practice of automatically preparing code for release after CI passes. Continuous Delivery means the code is ready to deploy with manual approval. Continuous Deployment means the code is automatically deployed to production without manual intervention.
+```[cite: 145]
+
+**Q3.** What is the role of Jenkins in a CI/CD pipeline?
+**A3.**
+```text
+Jenkins is an open-source automation server that builds, tests, and deploys code automatically. It acts as the central orchestrator connecting Git, Maven, Tomcat, and other tools. It triggers the pipeline whenever code changes are pushed.
+```[cite: 145]
+
+**Q4.** What is a webhook in GitHub?
+**A4.**
+```text
+A webhook is an HTTP callback that GitHub sends to a configured URL when an event occurs. It delivers a POST request with event data (like a push). It enables real-time notifications instead of periodic polling.
+```[cite: 145]
+
+**Q5.** Why are webhooks used in Jenkins integration?
+**A5.**
+```text
+Webhooks allow GitHub to notify Jenkins immediately when code is pushed. This removes the need for Jenkins to poll the repository repeatedly. As a result, builds trigger instantly and server resources are saved.
+```[cite: 145]
+
+**Q6.** What are the different types of build triggers available in Jenkins?
+**A6.**
+```text
+Common triggers include Manual (Build Now), SCM Polling, Webhook (GitHub hook), Timer (cron schedule), Upstream job trigger, and Remote trigger via URL. Each trigger defines when a build should start. Multiple triggers can be combined in one job.
+```[cite: 145]
+
+**Q7.** What is the difference between polling and webhook triggers?
+**A7.**
+```text
+Polling means Jenkins checks the repository periodically for changes (e.g., every 5 minutes). Webhook means GitHub notifies Jenkins immediately when a change occurs. Polling wastes resources and has delay, while webhooks are fast and efficient.
+```[cite: 145]
+
+**Q8.** What is ngrok and why is it used in Jenkins–GitHub integration?
+**A8.**
+```text
+ngrok is a tool that creates a secure public tunnel to a local server. It exposes localhost (like Jenkins on port 8081) to the internet. This allows GitHub to send webhook events to a locally running Jenkins instance.
+```[cite: 145]
+
+**Q9.** How does ngrok help in setting up webhooks for Jenkins running on a local machine?
+**A9.**
+```text
+GitHub cannot access localhost directly, so ngrok provides a public HTTPS URL that forwards to local Jenkins. This URL is used as the webhook payload URL in GitHub. Whenever GitHub sends an event, ngrok forwards it to Jenkins.
+```[cite: 146]
+
+**Q10.** Why do we configure email notifications in Jenkins and how are they useful for monitoring build results?
+**A10.**
+```text
+Email notifications automatically inform the team when a build succeeds or fails. This helps developers react quickly to failures without checking Jenkins manually. It improves monitoring, accountability, and faster feedback in the CI/CD pipeline.
+```[cite: 146]
+
+EXP. 12: Creation of virtual machine for Ubuntu OS and Deploying the web application
+Steps & Commands (Copy-Ready)
+1. High-Level Deployment Flow
+Create application and push into GitHub.
+
+Create the virtual machine and connect to it.
+
+Clone the application from GitHub and write the Dockerfile.
+
+Create the image.
+
+Run the image and access it via the public IP of the virtual machine.
+
+2. Launch Ubuntu EC2 Instance on AWS
+Log in to AWS / Canvas account -> Services > EC2 > Launch Instance.
+
+Name: ubuntu.
+
+AMI: Select free-tier eligible Ubuntu server.
+
+Architecture: 64-bit.
+
+Instance type: t2.micro (default 1 CPU, 1 GB RAM).
+
+Key pair: Create a new key pair (.pem file) and save it in an AWS folder.
+
+Network settings: Create Security group and select HTTP and HTTPS.
+
+Storage: 8GB root volume, Number of instances: 1, then click Launch instance.
+
+Select the running instance -> click Connect -> copy the ssh -i command from the SSH client connect tab, cd into your AWS folder, and run it in PowerShell / Git Bash / web console.
+
+3. Install Packages, Clone Repo, Write Dockerfile, Build & Run
+
+sudo apt update
+sudo apt-get install docker.io
+sudo apt install git
+sudo apt install nano
+git clone <paste the github link of maven-web-java project>
+
+FROM tomcat:9-jdk11
+COPY **/*.war /usr/local/tomcat/webapps/
+
+docker build -t <imagename> .
+docker images
+docker run -d --name app-demo -p 6060:8080 <image name>
+
+Access the app via the EC2 public IP (e.g., [http://23.22.143.191:6060](http://23.22.143.191:6060)), and update Security Group inbound rules if needed. Also shown in the PDF:
+git clone https://github.com/dockersamples/example-voting-app.git
+cd example-voting-app
+ls -a
+docker build -t jsptomcat:0.2 .
+docker images
+sudo docker ps
+```[cite: 147, 148, 149, 150]
+
+---
+
+### Scenario Based Questions
+
+**Q1.** Hosting `index.html` on Amazon Linux 2
+**A1.**
+```text
+Install the Apache web server using sudo yum install httpd -y and start it with sudo systemctl start httpd. Place your index.html file inside the /var/www/html/ directory and ensure Port 80 is open in the EC2 Security Group.
+```[cite: 150]
+
+**Q2.** Web page not loading after placing file in `/var/www/html/`
+**A2.**
+```text
+Check if the Apache service is actively running using sudo systemctl status httpd. Verify that the EC2 Security Group has an Inbound rule allowing HTTP (Port 80) traffic from your IP or anywhere.
+```[cite: 150]
+
+**Q3.** Apache service stops after reboot
+**A3.**
+```text
+Run the command sudo systemctl enable httpd (or apache2 for Ubuntu). This creates a symbolic link so the service automatically starts every time the instance boots.
+```[cite: 150]
+
+**Q4.** Installing Maven on EC2
+**A4.**
+```text
+Ubuntu: Run sudo apt update followed by sudo apt install maven -y.
+Amazon Linux: Run sudo yum install maven -y.
+```[cite: 150]
+
+**Q5.** Placing the `.war` file for Tomcat
+**A5.**
+```text
+Place the .war file inside the Tomcat webapps/ directory (e.g., /opt/tomcat/webapps/ or /usr/share/tomcat/webapps/). Tomcat automatically scans this directory, extracts the WAR file, and deploys the application.
+```[cite: 150, 151]
+
+**Q6.** 404 Error in Tomcat
+**A6.**
+```text
+Verify the URL path matches the exact name of the WAR file (e.g., if it's myapp.war, the URL should be http://ip:8080/myapp). Check Tomcat's catalina.out logs to ensure the application deployed successfully without errors.
+```[cite: 151]
+
+**Q7.** App accessible via `curl` but not browser
+**A7.**
+```text
+The AWS Security Group is missing an Inbound rule for the specific port (e.g., Port 8080). Add a Custom TCP rule in the Security Group to allow traffic to that port.
+```[cite: 151]
+
+**Q8.** Public IP changed after Wi-Fi reconnect
+**A8.**
+```text
+You need to allocate and associate an Elastic IP (EIP) with your EC2 instance. This provides a static, public IPv4 address that does not change when the instance is stopped or restarted.
+```[cite: 151]
+
+**Q9.** Automating deployment on EC2 restart
+**A9.**
+```text
+Use EC2 User Data to pass a startup script during instance launch, or configure a systemd service. This runs commands automatically during the boot process.
+```[cite: 151]
+
+**Q10.** No internet for external dependencies
+**A10.**
+```text
+Attach a NAT Gateway to the VPC's route table (if the instance is in a private subnet) to allow outbound internet access for package downloads. Alternatively, use AWS VPC Endpoints to privately connect to AWS services without internet.
+```[cite: 151]

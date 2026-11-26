@@ -1,0 +1,405 @@
+EXP. 5: Docker CLI commands
+Steps & Commands (Copy-Ready)
+1. Docker CLI Commands with Redis
+
+docker pull redis
+docker run --name my-redis -d redis
+docker ps
+docker exec -it my-redis redis-cli
+
+Inside redis-cli:
+
+SET name "Alice"
+GET name
+exit
+
+Stopping, starting, removing container, and removing image:
+
+Bash
+docker stop my-redis
+docker start my-redis
+docker rm my-redis
+docker rmi redis
+
+2. Working with Dockerfile (Folder Setup)
+Windows:
+
+Bash
+mkdir C:\DockerProjects\Redis
+cd /c/DockerProjects/Redis
+
+in Git Bash:
+
+Bash
+mkdir DockerProjects
+cd DockerProjects
+mkdir Redis
+cd Redis
+```[cite: 75, 76, 77, 78]
+
+EXP. 6: Docker
+Steps & Commands (Copy-Ready)
+
+1. Write Dockerfile and Build Image
+Dockerfile
+FROM redis:latest
+CMD ["redis-server"]
+Bash
+nano Dockerfile
+docker build -t redisnew .
+
+2. Run, Inspect, Stop, Commit, Push, and Clean Up
+docker run --name myredisnew -d redisnew
+docker ps
+docker stop myredisnew
+docker login
+docker ps -a
+docker commit e7bafa621692c8b56d4c431355e64d4515ed33b00a0e156b32cf9c0cd88751fa AkshithaEruventi/redis1
+docker images
+docker push akshithaeruventi/redis1
+docker rm e7bafa621692c8b56d4c431355e64d4515ed33b00a0e156b32cf9c0cd88751fa
+docker rmi akshithaeruventi/redis1
+docker ps -a
+docker logout
+
+3. Pull Image, Run Container, Test Redis CLI, and Clean Up
+docker pull akshithaeruventi/redis1
+docker run --name myredis -d akshithaeruventi/redis1
+docker exec -it myredis redis-cli
+Inside redis-cli:
+SET name "Akshitha"
+GET name
+exit
+Stopping, removing container, listing images, removing image, and logging out:
+docker ps -a
+docker stop myredis
+docker rm c52c63e00222
+docker images
+docker rmi akshithaeruventi/redis1
+docker logout
+```[cite: 78, 79, 80, 81, 82, 83, 84]
+
+---
+
+### Scenario Based Questions
+
+**Q1.** Your application is running inside Docker, but you're not sure if the container is active. Which command helps you check running containers?
+**A1.**
+```bash
+docker ps
+```[cite: 84]
+
+**Q2.** You notice one of your containers is consuming high CPU and want to stop it. How do you stop a running container named `web_app`?
+**A2.**
+```bash
+docker stop web_app
+```[cite: 84]
+
+**Q3.** You've written a Dockerfile in your project directory and want to build an image named `myapi`. What Docker CLI command do you use?
+**A3.**
+```bash
+docker build -t myapi .
+```[cite: 84, 85]
+
+**Q4.** You want to run your `web_app` container and expose its internal port 5000 on host port 8080. Which command should you use?
+**A4.**
+```bash
+docker run --name web_app -p 8081:5000 myapi
+docker ps
+```[cite: 85]
+
+**Q5.** Your container is running, but you want to go inside and debug it using a shell. What CLI command helps you enter the container's shell?
+**A5.**
+```bash
+docker exec -it web_app //bin/sh
+```[cite: 85]
+
+**Q6.** You've built a few test images and want to delete one called `old_api`. How would you do this?
+**A6.**
+```bash
+docker stop web_app
+docker rm web_app
+docker ps -a
+```[cite: 85]
+
+**Q7.** Your app crashed in the container. You need to check the logs. How do you check this?
+**A7.**
+```bash
+docker logs web_app2
+```[cite: 85, 86]
+
+**Q8.** You want to start a container and let it run in the background. Which command should you use?
+**A8.**
+```bash
+docker run -d redisnew
+```[cite: 86]
+
+**Q9.** You're not sure which container is using port 3000. How do you check?
+**A9.**
+```bash
+docker ps --filter "publish=3000"
+```[cite: 86]
+
+**Q10.** You built an image but forgot to tag it. How do you tag it now?
+**A10.**
+```bash
+docker tag myapi myapi:v1
+docker images
+```[cite: 86]
+
+**Q11.** You want to export an image to a tar file for offline transfer. How do you export it?
+**A11.**
+```bash
+docker save -o myapi.tar myapi
+```[cite: 86]
+
+**Q12.** You want to restart a container automatically if it crashes. What Docker CLI command do you use?
+**A12.**
+```bash
+docker run --restart on-failure -d redisnew
+```[cite: 86]
+
+**Q13.** You want to see how much CPU/RAM each container uses. What Docker CLI command do you use? How to Control or Limit RAM in Docker? How to Measure Actual Memory Usage?
+**A13.**
+```bash
+docker stats
+docker run -d --memory="512m" redisnew
+```[cite: 86, 87]
+
+**Q14.** You want your container to run a shell command before starting the app. What do you include in docker file?
+**A14.**
+```bash
+docker build -t myapi .
+docker run -d myapi
+```[cite: 87]
+
+**Q15.** You want to create a custom Nginx image with your static files. What do you do?
+**A15.**
+```bash
+echo 'FROM nginx:latest' > Dockerfile
+echo 'COPY index.html /usr/share/nginx/html/index.html' >> Dockerfile
+docker build -t my-nginx .
+docker run -d -p 8082:80 my-nginx
+```[cite: 87, 88]
+
+EXP. 7: Creating Multi-Containerization Using Docker Compose
+Steps & Commands (Copy-Ready)
+1. Basic docker-compose.yml Examples
+WordPress + MySQL example:
+version: '3.8'
+services:
+  wordpress:
+    image: wordpress:latest
+    ports:
+      - "8080:80"
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: wordpress
+      WORDPRESS_DB_NAME: wordpress
+    depends_on:
+      - db
+  db:
+    image: mysql:5.7
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: wordpress
+      MYSQL_PASSWORD: wordpress
+
+Nginx + Postgres (docker-compose.yml):
+version: "3.9"
+services:
+  web:
+    image: nginx:latest
+    ports:
+      - "8080:80"
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: demo
+      POSTGRES_PASSWORD: demo
+      POSTGRES_DB: demo_db
+
+2. Basic Compose Lifecycle CommandsBashmkdir docker-lab
+cd docker-lab
+nano docker-compose.yml
+docker compose up -d
+docker compose down
+docker compose up --scale web=2 -d
+3. Task 1: Define and Run Multiple Interdependent ServicesBashmkdir compose-lab
+nano docker-compose.yml
+docker compose up -d
+Visit http://localhost:8080.4. Task 2: Write and Interpret docker-compose.yml (Add Redis & depends_on)YAMLversion: "3.9"
+services:
+  redis:
+    image: redis:alpine
+  web:
+    image: nginx:latest
+    ports:
+      - "8080:80"
+    depends_on:
+      - redis
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: demo
+      POSTGRES_PASSWORD: demo
+      POSTGRES_DB: demo_db
+Bashdocker compose up -d
+docker compose ps
+docker exec -it docker-lab-db-1 bash
+SQL commands shown in the terminal screenshot:SQLmysql -u root -p
+SHOW DATABASES;
+use sys;
+create table student(sid int, sname varchar(100));
+desc student;
+5. Task 3: Deploy Across Different MachinesZip compose-lab, transfer to another machine with Docker Compose installed, and run:Bashdocker compose up -d
+6. Task 4: Networking and Persistent StorageYAMLnetworks:
+  app-net:
+volumes:
+  db-data:
+services:
+  web:
+    image: nginx:latest
+    ports:
+      - "8080:80"
+    networks:
+      - app-net
+    depends_on:
+      - db
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: demo
+      POSTGRES_PASSWORD: demo
+      POSTGRES_DB: demo_db
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    networks:
+      - app-net
+Bashdocker compose up -d
+docker compose down
+docker compose up -d
+7. Task 5: Faster Iteration During Development (Flask + Docker Compose)app.py:Pythonfrom flask import Flask
+app = Flask(__name__)
+
+@app.route("/")
+def home():
+    return "Hello from Flask + Docker!"
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
+Dockerfile:DockerfileFROM python:3.10-slim
+WORKDIR /app
+COPY app.py /app/
+RUN pip install flask
+CMD ["python", "app.py"]
+docker-compose.yml snippet:YAMLweb:
+  build: .
+  ports:
+    - "5000:5000"
+  depends_on:
+    - db
+Build and rebuild commands:Bashdocker compose up --build
+Visit http://localhost:5000.   Scenario Based QuestionsQ1. You have two applications a Node.js backend and a Python script that handles scheduled jobs. You're considering running both inside the same container. Should you run multiple applications in the same Docker container?A1.Plaintext(No explicit answer text is printed in the PDF for Q1.)
+```[cite: 99]
+
+**Q2.** You have a Flask API and an Nginx server. You want to run both containers on the same host and expose them on ports 5000 and 80 respectively. How can you expose both applications from different containers?
+**A2.**
+```bash
+cd sc2
+nano app.py
+nano Dockerfile
+nano docker-compose.yml
+docker compose up
+docker compose ps
+Visit http://localhost:5000.   Q3. You want to run a React frontend, an Express.js backend and MongoDB - all together. How do you run and manage all three together?A3.YAMLservices:
+  frontend:
+    image: nginx:latest
+    ports:
+      - "3000:80"
+  backend:
+    image: node:18
+    command: node -e "require('http').createServer((req, res)=>res.end('Express Backend')).listen(5000)"
+    ports:
+      - "5000:5000"
+    depends_on:
+      - mongodb
+  mongodb:
+    image: mongo:latest
+Bashmkdir sc3
+cd sc3
+nano docker-compose.yml
+docker compose up -d
+```[cite: 100, 101]
+
+**Q4.** You try to run two containers that both expose port 8080 on the host. What happens, and how can you run both apps?
+**A4.**
+```yaml
+services:
+  app1:
+    image: nginx:latest
+    ports:
+      - "8082:80"
+  app2:
+    image: nginx:latest
+    ports:
+      - "8081:80"
+Bashnano docker-compose.yml
+docker compose up -d
+docker compose down
+docker compose up -d
+```[cite: 101, 102]
+
+**Q5.** You updated some code and want to restart your frontend, backend, and DB containers quickly. What is the easiest way to restart all services?
+**A5.**
+```bash
+cd ~/sc3
+docker compose ps
+docker compose restart
+docker compose ps
+```[cite: 102]
+
+**Q6.** Your frontend has a new release, but you don't want to restart the backend or DB. How can you update and rebuild only the frontend container?
+**A6.**
+```yaml
+services:
+  frontend:
+    build: ./frontend
+    ports:
+      - "3001:80"
+  backend:
+    image: nginx:latest
+    ports:
+      - "3002:80"
+  db:
+    image: mongo:latest
+Bashmkdir sc6
+cd sc6
+mkdir frontend
+nano frontend/Dockerfile
+nano frontend/index.html
+nano docker-compose.yml
+docker compose ps
+Visit http://localhost:3001.   Q7. Tomcat is listening on port 8080, but you get a "Connection Refused" error in the browser. Why?A7.Plaintext(No explicit answer text is printed in the PDF for Q7; a docker-compose.yml for tomcat:9 on port 8080:8080 and `docker compose up -d` are shown on page 104.)
+```[cite: 103, 104]
+
+**Q8.** You're not sure which container is using port 3000. How do you check?
+**A8.**
+```text
+We can use the docker ps command to view all running containers and check the PORTS column to identify which container is using port 3000.
+```[cite: 103]
+
+**Q9.** How do you stop and clean up your running Tomcat container and image?
+**A9.**
+```text
+First, stop the running Tomcat container using docker stop, remove the container using docker rm, and then remove the Tomcat image using docker rmi.
+```[cite: 103]
+
+**Q10.** You want to share your app with a teammate. What do you do with the Docker image?
+**A10.**
+```text
+(No explicit answer text is printed in the PDF for Q10.)
+```[cite: 103]
+

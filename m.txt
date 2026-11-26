@@ -1,0 +1,252 @@
+EXP. 4: Build and package Java and Web applications using Maven
+Steps & Commands (Copy-Ready)
+1. Maven Build, Testing, and Packaging Commands
+
+mvn test
+mvn clean install
+mvn package
+mvn package -DskipTests
+mvn site
+mvn dependency:tree
+mvn -X
+```[cite: 59, 60, 66, 68, 70, 71, 72]
+
+#### 2. Run Generated Artifacts
+```bash
+java -jar target/myapp.jar
+```[cite: 70, 72]
+
+#### 3. Sample `pom.xml` Snippets
+JUnit & Gson dependencies:
+```xml
+<dependency>
+  <groupId>junit</groupId>
+  <artifactId>junit</artifactId>
+  <version>4.13.2</version>
+  <scope>test</scope>
+</dependency>
+<dependency>
+  <groupId>com.google.code.gson</groupId>
+  <artifactId>gson</artifactId>
+  <version>2.10</version>
+</dependency>
+```[cite: 61]
+
+Servlet API dependency:
+```xml
+<dependency>
+  <groupId>javax.servlet</groupId>
+  <artifactId>javax.servlet-api</artifactId>
+  <version>4.0.1</version>
+  <scope>provided</scope>
+</dependency>
+```[cite: 65]
+
+Maven Compiler Plugin:
+```xml
+<plugin>
+  <groupId>org.apache.maven.plugins</groupId>
+  <artifactId>maven-compiler-plugin</artifactId>
+  <version>3.11.0</version>
+  <configuration>
+    <source>17</source>
+    <target>17</target>
+  </configuration>
+</plugin>
+```[cite: 68]
+
+Executable JAR plugin (`maven-jar-plugin`):
+```xml
+<build>
+  <plugins>
+    <plugin>
+      <groupId>org.apache.maven.plugins</groupId>
+      <artifactId>maven-jar-plugin</artifactId>
+      <configuration>
+        <archive>
+          <manifest>
+            <mainClass>com.example.Main</mainClass>
+          </manifest>
+        </archive>
+      </configuration>
+    </plugin>
+  </plugins>
+</build>
+```[cite: 70]
+
+WAR packaging tag:
+```xml
+<packaging>war</packaging>
+```[cite: 70]
+
+#### 4. Creation of Maven Java Project (Eclipse Steps)
+1. Open Eclipse IDE and launch workspace.
+2. Install Maven plugin if needed: **Help > Eclipse Marketplace > search "Maven Integration for Eclipse" > Install**.
+3. Create project: **File > New > Project... > Maven > Maven Project > Next**.
+4. Select workspace location and click **Next**.
+5. Choose archetype (e.g., `org.apache.maven.archetypes -> maven-archetype-quickstart 1.4`) and click **Next**.
+6. Enter **Group ID** (e.g., `com.example`), **Artifact ID** (e.g., `my-maven-project`), and **Version**, then click **Finish** (type `Y` in console if prompted).
+7. Standard structure generated: `src/main/java`, `src/test/java`, `pom.xml`.
+8. Right-click project -> **Maven > Update Project...** if needed.
+9. Build/run via **Run As**: **Maven Clean**, **Maven Install**, **Maven Test**, or **Maven Build**.
+10. In **Maven Build** dialog: enter Goals `clean install test` -> **Apply** -> **Run**.
+11. Check console for `BUILD SUCCESS`.
+12. Right-click `App.java` -> **Run As > Java Application** (`Hello World` output)[cite: 61, 62, 63, 64].
+
+#### 5. Creation of Maven Web Java Project (Eclipse Steps)
+1. Open Eclipse IDE and select/create workspace.
+2. **File > New > Project... > Maven > Maven Project > Next**.
+3. Choose archetype `org.apache.maven.archetypes -> maven-archetype-webapp 1.4` and click **Next**.
+4. Enter **Group ID** (e.g., `com.example`) and **Artifact ID** (e.g., `my-web-app`), then click **Finish**.
+5. Open `pom.xml` and add required dependencies (e.g., Servlet/JSP from `mvnrepository.com`).
+6. Configure server: **Window > Show View > Servers > Add server > Tomcat v9.0 server > Next**.
+7. Modify `tomcat-users.xml` to add role and user details under `<tomcat-users>`.
+8. Build via **Run As**: **Maven Clean**, **Maven Install**, **Maven Test**, or **Maven Build**.
+9. In **Maven Build** dialog: enter Goals `clean install test` -> **Apply** -> **Run**.
+10. Check console for `BUILD SUCCESS`.
+11. Right-click `index.jsp` -> **Run As > Run on Server** -> select Tomcat server -> **Finish**.
+12. View output in browser (e.g., `localhost:8090/my-webapp/index.jsp`) and push Maven Java and Maven Web projects to GitHub[cite: 64, 65, 66, 67, 68].
+
+#### 6. JUnit Test, Resource File, and Multi-Module Snippets
+Sample JUnit test (`src/test/java`):
+```java
+public class AppTest {
+  @Test
+  public void testSum() {
+    assertEquals(5, 2 + 3);
+  }
+}
+```[cite: 68, 69]
+
+Reading resource from `src/main/resources/config.properties`:
+```java
+InputStream input = getClass().getClassLoader().getResourceAsStream("config.properties");
+```[cite: 69]
+
+Multi-module layout:
+```text
+parent/
+  pom.xml (packaging: pom)
+  core/
+    pom.xml
+  web/
+    pom.xml
+```[cite: 69, 70]
+
+---
+
+### Scenario-Based Questions
+
+**Q1.** If my error is about `maven-compiler-plugin` failure, how can I resolve it using Maven terminal?
+**A1.**
+```text
+Run mvn clean install and check the compiler error in the console. If required, run mvn -X for the full stack trace, correct the plugin/configuration issue, and rebuild.
+```[cite: 71]
+
+**Q2.** A dependency you added is not recognized by the compiler. How would you confirm it is available in `.m2` and listed in dependency tree?
+**A2.**
+```text
+Check the dependency inside the local m2/repository directory and run mvn dependency:tree. Verify that the required dependency and version appear correctly, then run mvn clean install.
+```[cite: 71]
+
+**Q3.** A teammate sends a patch file for a bug fix. How would you apply it and include it in your Maven build?
+**A3.**
+```text
+Apply the patch to the project source using a Git patch command such as git apply file.patch. Verify the changes, run Maven tests/build, and include the modified source files in the Maven project.
+```[cite: 71]
+
+**Q4.** You have multiple JUnit test failures and want to rerun only failed tests. How would you approach this?
+**A4.**
+```text
+Check the failure reports under target/surefire-reports/ to identify the failed tests. Correct the failures and rerun the required tests using Maven/Surefire test-selection options.
+```[cite: 71]
+
+**Q5.** Your Maven build fails due to "Unsupported class version error." What plugin and configuration would you review?
+**A5.**
+```text
+Review the maven-compiler-plugin configuration in pom.xml. Check the <source> and <target> Java versions and make sure they match the installed JDK version.
+```[cite: 71]
+
+**Q6.** You need to change your Java application from a WAR to a standalone JAR. What `pom.xml` changes are needed?
+**A6.**
+```text
+Change <packaging>war</packaging> to JAR packaging or remove the WAR packaging configuration. Configure the Maven JAR plugin with the application's main class and build using mvn package.
+```[cite: 71]
+
+**Q7.** You are required to change the default build output directory from `target/` to `build_output/`. How would you configure it?
+**A7.**
+```text
+Configure Maven's build output directory in the <build> section of pom.xml. Set <directory>build_output</directory> and run the Maven build again.
+```[cite: 71]
+
+**Q8.** You want to skip tests during the Maven build. What command would you use?
+**A8.**
+```text
+Use mvn package -DskipTests to package the application without running the tests. The project will still be compiled and packaged.
+```[cite: 71]
+
+**Q9.** How would you generate a site report with test coverage and dependency analysis for a Maven project?
+**A9.**
+```text
+Configure the required reporting plugins in pom.xml and run mvn site. Maven generates the project site and reports in the target/site/ directory.
+```[cite: 72]
+
+**Q10.** How do you build a Java project using Maven, and what files are generated in `target/` after `mvn clean install`?
+**A10.**
+```text
+Run mvn clean install, which cleans the previous build, compiles, tests, packages, and installs the artifact. The target/ directory contains compiled classes, test classes/reports, and the generated JAR/WAR.
+```[cite: 72]
+
+**Q11.** How does Maven resolve dependency conflicts when two libraries use different versions of the same dependency, and how can you view and manage the dependency tree?
+**A11.**
+```text
+Maven resolves conflicts using its dependency mediation mechanism, normally selecting the nearest dependency in the dependency tree. Use mvn dependency:tree to view the dependencies and identify conflicting versions.
+```[cite: 72]
+
+**Q12.** How do you write and run a JUnit test in a Maven project, and where are the compiled test classes and reports stored after `mvn test`?
+**A12.**
+```text
+Place the JUnit test inside src/test/java and run mvn test. Compiled test classes are stored in target/test-classes/, while test results are stored in target/surefire-reports/.
+```[cite: 72]
+
+**Q13.** How can you create an executable JAR with a main method using Maven, and which plugin helps configure this behavior?
+**A13.**
+```text
+Configure the maven-jar-plugin in pom.xml and specify the main class inside the manifest configuration. Then run mvn package and execute it using java -jar target/myapp.jar.
+```[cite: 72]
+
+**Q14.** How do you install and use a custom third-party JAR file in your Maven project, and how can you confirm it is included in the build and classpath?
+**A14.**
+```text
+Install the JAR into the local Maven repository with mvn install:install-file and add it as a dependency in pom.xml. Verify it using mvn dependency:tree and check the generated target/ output.
+```[cite: 72]
+
+**Q15.** How do you create a Maven web project that packages into a WAR file, and what is the standard folder structure?
+**A15.**
+```text
+Create a Maven Web Application and set <packaging>war</packaging> in pom.xml. The standard structure includes src/main/webapp/ and src/main/webapp/WEB-INF/web.xml.
+```[cite: 72]
+
+**Q16.** What command do you use to build a WAR file in Maven, where is it generated, and how can you deploy it to Apache Tomcat?
+**A16.**
+```text
+Run mvn package; Maven generates the WAR inside the target/ directory. Copy/deploy the generated .war file to the Tomcat server's webapps/ directory.
+```[cite: 72]
+
+**Q17.** How do you add JSTL and `servlet-api` dependencies, and why should Servlet API use `provided` scope?
+**A17.**
+```text
+Add JSTL and Servlet API dependencies in pom.xml; configure Servlet API with <scope>provided</scope>. This means the Servlet API is supplied by the web server such as Tomcat rather than packaged inside the WAR.
+```[cite: 72, 73]
+
+**Q18.** How do you set up a multi-module Maven web project with separate modules for core logic and web interface?
+**A18.**
+```text
+Create a parent project with packaging set to pom and define core and web under <modules>. Each module has its own pom.xml and target/, while the web module can depend on the core module.
+```[cite: 73]
+
+**Q19.** How do you configure a Maven web project, and how does its packaging and execution differ from a traditional WAR-based application?
+**A19.**
+```text
+Configure the project through pom.xml, dependencies, web resources, and the required Maven plugins. A WAR-based application is packaged as war and deployed to a server such as Tomcat, while a standalone application can be packaged as an executable JAR and run directly.
+```[cite: 73]

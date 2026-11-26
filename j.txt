@@ -1,0 +1,440 @@
+EXP. 8: Jenkins Automation
+Steps & Commands (Copy-Ready)
+I. Maven Java Automation Steps
+Open Jenkins (localhost:8080) -> click New Item.
+
+Create Freestyle Project (MavenJava_Build) -> click OK:
+
+Description: Java Build demo
+
+Source Code Management: Git repository URL [GitMavenJava repo URL], Branches to build: */Main or */master
+
+Build Steps:
+
+Invoke top-level Maven targets -> Maven version: MAVEN_HOME, Goals: clean
+
+Invoke top-level Maven targets -> Maven version: MAVEN_HOME, Goals: install
+
+Post-build Actions:
+
+Archive the artifacts -> Files to archive: **/*
+
+Build other projects -> Projects to build: MavenJava_Test, Trigger: Only if build is stable
+
+Click Apply and Save.
+
+Create Freestyle Project (MavenJava_Test) -> click OK:
+
+Description: Test demo
+
+Build Environment: check Delete the workspace before build starts
+
+Build Steps:
+
+Copy artifacts from another project -> Project name: MavenJava_Build, Build: Stable build only, Artifacts to copy: **/*
+
+Invoke top-level Maven targets -> Maven version: MAVEN_HOME, Goals: test
+
+Post-build Actions:
+
+Archive the artifacts -> Files to archive: **/*
+
+Click Apply and Save.
+
+Create Pipeline View (MavenJava_Pipeline):
+
+Click + beside All -> enter name MavenJava_Pipeline -> select Build pipeline view -> Create.
+
+Pipeline Flow: Layout Based on upstream/downstream relationship, Initial job MavenJava_Build -> Apply and Save.
+
+Run the pipeline and check console output (green indicates success).
+
+II. Maven Web Automation Steps
+Open Jenkins (localhost:8080) -> click New Item.
+
+Create Freestyle Project (MavenWeb_Build) -> click OK:
+
+Description: Web Build demo
+
+Source Code Management: Git repository URL [GitMavenWeb repo URL], Branches to build: */Main or master
+
+Build Steps:
+
+Invoke top-level Maven targets -> Maven version: MAVEN_HOME, Goals: clean
+
+Invoke top-level Maven targets -> Maven version: MAVEN_HOME, Goals: install
+
+Post-build Actions:
+
+Archive the artifacts -> Files to archive: **/*
+
+Build other projects -> Projects to build: MavenWeb_Test, Trigger: Only if build is stable
+
+Click Apply and Save.
+
+Create Freestyle Project (MavenWeb_Test) -> click OK:
+
+Description: Test demo
+
+Build Environment: check Delete the workspace before build starts
+
+Build Steps:
+
+Copy artifacts from another project -> Project name: MavenWeb_Build, Build: Stable build only, Artifacts to copy: **/*
+
+Invoke top-level Maven targets -> Maven version: MAVEN_HOME, Goals: test
+
+Post-build Actions:
+
+Archive the artifacts -> Files to archive: **/*
+
+Build other projects -> Projects to build: MavenWeb_Deploy
+
+Click Apply and Save.
+
+Create Freestyle Project (MavenWeb_Deploy) -> click OK:
+
+Description: Web Code Deployment
+
+Build Environment: check Delete the workspace before build starts
+
+Build Steps:
+
+Copy artifacts from another project -> Project name: MavenWeb_Test, Build: Stable build only, Artifacts to copy: **/*
+
+Post-build Actions:
+
+Deploy WAR/EAR to a container -> WAR/EAR File: **/*.war, Context path: Webpath
+
+Add container -> Tomcat 9.x remote
+
+Credentials: Username admin, Password 1234
+
+Tomcat URL: https://localhost:8085/
+
+Click Apply and Save.
+
+Create Pipeline View (MavenWeb_Pipeline):
+
+Click + beside All -> enter name MavenWeb_Pipeline -> select Build pipeline view -> Layout Based on upstream/downstream relationship, Initial job MavenWeb_Build -> Apply and Save.
+
+Click RUN, check console logs (green when successful), open Tomcat homepage, log in with Tomcat credentials, and open /webpath -> project link to view output.   
+SE_record_final.pdf
+
+III. Questions on Jenkins
+Q1. What is Jenkins primarily used for?A1.
+
+Plaintext
+Jenkins is primarily used for Continuous Integration (CI) and Continuous
+```[cite: 113]
+
+**Q2.** What is feature of Jenkins?
+**A2.**
+```text
+Opensource
+CI/CD
+Integrates with Git,Github,Docker,Maven
+```[cite: 113, 115]
+
+**Q3.** What is the default port on which Jenkins runs?
+**A3.**
+```text
+8080
+```[cite: 115]
+
+**Q4.** What can be integrated with Jenkins for version control?
+**A4.**
+```text
+Git,Github
+```[cite: 115]
+
+**Q5.** What is the purpose of Jenkins plugins?
+**A5.**
+```text
+Extend the functionality of Jenkins
+```[cite: 115]
+
+**Q6.** Which type of Jenkins job is best suited for running one-off tasks or small scripts?
+**A6.**
+```text
+I think Freestyle Project
+```[cite: 115]
+
+**Q7.** How can you manage sensitive information such as API keys in Jenkins?
+**A7.**
+```text
+Jenkins Credentials
+```[cite: 115]
+
+**Q8.** What does the "blue ocean" feature in Jenkins refer to?
+**A8.**
+```text
+User friendly to create ,view and manage Jenkins
+```[cite: 115]
+
+**Q9.** Which Jenkins component allows for distributed builds across multiple machines?
+**A9.**
+```text
+Jenkins Controller,
+Jenkins Agents
+```[cite: 115]
+
+**Q10.** List at least five Jenkins plugins that you would consider important for a microservices-based application CI/CD pipeline. Briefly explain the purpose of each plugin.
+**A10.**
+```text
+Git Plugin,
+Pipeline plugin
+Docker pipeline plugin
+Github Integration plugin
+```[cite: 115]
+
+**Q11.** Explain the steps you would take to install a plugin in Jenkins through the Jenkins UI. What considerations would you keep in mind regarding plugin compatibility and updates?
+**A11.**
+```text
+Open Jenkins
+Log in as an administrator.
+Go to Manage Jenkins.
+Select Plugins.
+Open the Available Plugins section.
+Search for the required plugin.
+Select the plugin.
+Click Install or Install without restart.
+Wait for the installation to complete.
+Restart Jenkins if required.
+```[cite: 115]
+
+**Q12.** After installing a plugin, explain how you would configure it within Jenkins. For example, if you installed the Git Plugin, what steps would you take to set it up for your pipeline?
+**A12.**
+```text
+(No answer text is printed in the PDF for Q12.)
+```[cite: 115]
+
+**Q13.** Discuss common issues that might arise when using Jenkins plugins, such as dependency conflicts or version compatibility problems. How would you troubleshoot these issues?
+**A13.**
+```text
+(No answer text is printed in the PDF for Q13.)
+```[cite: 115]
+
+EXP. 9: Pipeline Creation using script
+Steps & Commands (Copy-Ready)
+1. Procedure in Jenkins
+Under General, provide a description of the project.
+
+Under Build triggers, configure build triggers of your choice.
+
+Under Advanced project option / Definition, choose Pipeline script, paste the pipeline script below, and click Apply and Save.
+pipeline script:
+
+pipeline {
+  agent any
+  tools {
+    maven 'MAVEN-HOME'
+  }
+  stages {
+    stage('git repo & clean') {
+      steps {
+        //bat "rmdir /s /q mavenjava"
+        bat "git clone provide your github link"
+        bat "mvn clean -f mavenjava"
+      }
+    }
+    stage('install') {
+      steps {
+        bat "mvn install -f mavenjava"
+      }
+    }
+    stage('test') {
+      steps {
+        bat "mvn test -f mavenjava"
+      }
+    }
+    stage('package') {
+      steps {
+        bat "mvn package -f mavenjava"
+      }
+    }
+  }
+}
+```[cite: 116]
+
+---
+
+### SBQ’s (Scenario-Based Questions)
+
+**Q1.** Your manager asks you to clean the workspace before building — which stage in this pipeline takes care of it?
+**A1.**
+```text
+Clean workspace:
+The Clean Workspace stage handles it, usually using deleteDir() or a workspace-cleanup step.
+```[cite: 117]
+
+**Q2.** The GitHub repository link is missing in the script — where exactly do you provide it?
+**A2.**
+```text
+https://github.com/Kushal72-rgb/demo-java-jenkins.git
+```[cite: 117]
+
+**Q3.** If Maven is not configured globally in Jenkins, which section of the pipeline will fail first?
+**A3.**
+```text
+The pipeline will fail when Jenkins tries to initialize the tools section:
+```[cite: 117]
+
+**Q4.** A teammate complains the pipeline is not creating .war files — which stage is responsible?
+**A4.**
+```groovy
+stage('Package') {
+  steps {
+    bat 'mvn package'
+  }
+}
+```[cite: 117]
+
+**Q5.** Your test cases failed, but the pipeline still continued — how will Jenkins behave in the test stage?
+**A5.**
+```text
+mvn test normally returns a non-zero exit code, so Jenkins marks the Test stage as failed and stops subsequent stages unless the pipeline explicitly ignores the failure.
+```[cite: 117, 118]
+
+**Q6.** Instead of running nightly builds, you want this pipeline to trigger only when GitHub changes occur — where will you configure it?
+**A6.**
+```text
+Configure a GitHub webhook/push trigger instead of a nightly cron trigger.
+```[cite: 118]
+
+**Q7.** If you replace mvn clean with mvn compile, what difference will it make to the project build?
+**A7.**
+```text
+There is an important difference:
+- mvn clean -> removes previous build files, usually the target directory.
+- mvn compile -> compiles the Java source code.
+```[cite: 118]
+
+**Q8.** The project folder name is not mavenjava but studentapp — which parts of the script must you edit?
+**A8.**
+```text
+Change every place where mavenjava is explicitly used as a directory/project name.
+```[cite: 118]
+
+**Q9.** If the install stage fails, will the test and package stages still run in this pipeline?
+**A9.**
+```text
+If the Install stage fails, Jenkins normally stops the pipeline.
+```[cite: 118]
+
+**Q10.** A student asks where to add deployment steps to Tomcat after packaging — which is the best place in this script?
+**A10.**
+```text
+Add a Deploy stage immediately after the Package stage.
+```[cite: 118]
+
+**Q11.** Why is tools { maven 'MAVEN-HOME' } used in this pipeline?
+**A11.**
+```text
+It tells Jenkins which Maven installation to use.
+tools {
+  maven 'MAVEN-HOME'
+}
+MAVEN-HOME should be the name of the Maven installation configured under Jenkins' global tools.
+```[cite: 118]
+
+**Q12.** If GitHub credentials are private, how can you secure them in the git repo & clean stage?
+**A12.**
+```text
+Do not put the GitHub username/password/token directly in the Jenkinsfile.
+Instead:
+1. Add the credentials to Jenkins Credentials Manager.
+2. Give them a credential ID.
+3. Use that credential ID in the Git checkout step.
+This keeps sensitive credentials out of the Git repository
+```[cite: 118, 119]
+
+**Q13.** Which Jenkins plugin is needed to recognize the pipeline { ... } structure in this script?
+**A13.**
+```text
+PIPELINE?DECLARATIVE PLUGIN
+```[cite: 119]
+
+**Q14.** In Windows, the script uses bat commands — what change would you make if Jenkins runs on Linux?
+**A14.**
+```bash
+sh 'mvn clean'
+```[cite: 119]
+
+**Q15.** How will you modify the pipeline to stop execution if the GitHub clone command fails?
+Your project lead asks you to print a welcome message in Jenkins to confirm the pipeline is working — how would you script it?
+**A15.**
+```bash
+sh 'git clone https://github.com/Kushal72-rgb/demo-java-jenkins.git'
+```[cite: 119]
+
+**Q16.** A teammate forgot to pull the latest GitHub code before building; how can you fix this in your pipeline?
+**A16.**
+```text
+Add a Checkout stage before the build.
+```[cite: 119]
+
+**Q17.** Your Java file Hello.java must be compiled every time code is committed — how will you add this step?
+**A17.**
+```groovy
+stage('Compile') {
+  steps {
+    bat 'javac Hello.java'
+  }
+}
+```[cite: 119]
+
+**Q18.** Tests should stop the pipeline if they fail — where will you put the mvn test command?
+**A18.**
+```groovy
+stage('Test') {
+  steps {
+    bat 'mvn test'
+  }
+}
+```[cite: 119, 120]
+
+**Q19.** Every evening at 6 PM your pipeline should run automatically — how can you set this in Jenkins?
+**A19.**
+```groovy
+triggers {
+  cron('0 18 * * *')
+}
+```[cite: 120]
+
+**Q20.** You only want to package the project if compilation succeeds — how would you connect the stages?
+**A20.**
+```groovy
+stage('Compile') {
+  steps {
+    bat 'mvn compile'
+  }
+}
+stage('Package') {
+  steps {
+    bat 'mvn package'
+  }
+}
+```[cite: 120]
+
+**Q21.** Your professor wants a .jar file generated for submission — what pipeline stage will you add?
+**A21.**
+```groovy
+stage('Package') {
+  steps {
+    bat 'mvn package'
+  }
+}
+```[cite: 120]
+
+**Q22.** A Git clone step is failing due to wrong credentials — how would you secure and use them in your script?
+**A22.**
+```text
+JENKINS CREDITIALS MANAGER
+```[cite: 120, 121]
+
+**Q23.** A teammate wants to see the build number inside console logs — how do you print it in the pipeline?
+**A23.**
+```groovy
+echo "Build Number: ${BUILD_NUMBER}"
+```[cite: 122]

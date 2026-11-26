@@ -1,0 +1,512 @@
+EXP. 2: Exploring git local and remote commands on the multi-folder project
+
+Task 1: Pushing Multi-Folder Project to a Private Repository
+Create a Private repository on [https://github.com](https://github.com) (New repository -> enter name -> check Private -> Create repository).
+
+Initialize Git in your project folder:
+mkdir myproject3334
+cd myproject3334
+git init
+
+Add the remote repository:
+Bash
+git remote add origin https://github.com/yourusername/your-private-repo.git
+git remote -v
+
+Stage and commit files:
+Bash
+git add .
+git commit -m "Initial commit"
+
+Push to the remote repository:
+Bash
+git push -u origin master
+
+git push -u origin main
+```[cite: 11, 12]
+
+---
+
+## Task 2: Exploring Local and Remote Git Commands
+
+### 1. Git Setup and Config
+```bash
+git --version
+git config --global user.name "Your Name"
+git config --global user.email youremail@example.com
+git config --list
+```[cite: 13]
+
+### 2. Repository and Remote Management
+```bash
+git init
+git clone https://github.com/username/repository.git
+git remote -v
+git remote add origin https://github.com/username/repository.git
+git push origin main
+git pull origin main
+git remote remove origin
+git remote rename origin upstream
+git fetch origin
+git remote set-url origin https://github.com/username/new-repository.git
+git remote show origin
+```[cite: 13, 14, 15, 16]
+
+### 3. Staging and Committing
+```bash
+git status
+git add filename.txt
+git add .
+git commit -m "Commit message describing changes"
+```[cite: 17, 18]
+
+### 4. Branching, Merging, Rebasing, and Remotes
+```bash
+git branch
+git branch -a
+git branch branch-name
+git branch -d branch-name
+git branch -D branch-name
+git branch -r
+git checkout branch-name
+git checkout -b new-branch
+git remote prune origin
+git fetch origin feature-branch
+git push --set-upstream origin feature-branch
+git checkout main
+git merge branch-name
+git fetch origin
+git rebase origin/main
+```[cite: 18, 19, 20]
+
+### 5. Undoing Changes and Viewing History
+```bash
+git reset file.txt
+git revert commit-hash
+git log
+git log --oneline
+git diff
+git show commit-hash
+git restore filename.txt
+git commit --amend -m "Corrected commit message"
+```[cite: 20, 21, 22]
+
+### 6. Recovering Branches, Rewriting History, Conflicts, `.gitignore`, Blame, and Stash
+```bash
+git reflog
+git checkout -b feature-ui commit-hash
+git fetch origin
+git filter-branch --force --index-filter "git rm --cached --ignore-unmatch secrets.txt" --prune-empty --tag-name-filter cat -- --all
+git checkout previous-branch
+git merge another-branch
+git add app.js
+git commit
+touch .gitignore
+git blame login.js
+git stash
+git switch another-branch
+git switch main
+git stash apply
+git branch --merged
+git branch -d branch1 branch2 branch3
+```[cite: 23, 24, 25, 26, 27]
+
+Sample `.gitignore` rules:
+```text
+*.log
+secret_file.txt
+temp/
+folder/*
+!folder/important_file.txt
+*.bak
+```[cite: 25, 26]
+
+Scenario Based Questions on Basic Git Commands
+Q1. You made changes to one file in the above project but haven't staged them yet. You realize they were a mistake. What Git command will you use to discard the local changes?A1.
+
+Bash
+git restore file.txt
+git restore app.js
+Q2. You accidentally ran git add file1.txt (note instead of file.txt consider one file from above project), but you're not ready to commit yet. How do you remove it from the staging area without losing the changes?A2.
+
+Bash
+git restore --staged file.txt
+git restore --staged app.js
+Q3. You made a commit but typed the wrong commit message. You haven't pushed it yet. How do you fix it?A3.
+
+Bash
+git commit --amend -m "New Commit Message"
+git commit --amend -m "Updated Login Page"
+Q4. You want to view the commit history of the current branch in a readable format. What Git command should you use?A4.
+
+Bash
+git log --oneline
+Q5. After cloning a repo, how can you set your name and email globally for all Git repositories?A5.
+
+Bash
+git config --global user.name "Your Name"
+git config --global user.email "you@example.com"
+git config --global user.name "Sk Owaiz"
+git config --global user.email "owaiz@example.com"
+Q6. You've made some edits to your files but haven't staged them. How can you view the changes?A6.
+
+Bash
+git diff
+Q7. You're on the main branch but need to switch to feature/login. What command do you [use]?A7.
+
+Bash
+git switch feature/login
+Q8. You deleted the feature-ui branch by mistake. You haven't pushed the deletion. How [do you recover it]?A8.
+
+Bash
+git branch feature-ui <commit-hash>
+git branch feature-ui a1b2c3d
+Q9. You've made some commits locally and now want to upload them to the remote repository. What do you run?A9.
+
+Bash
+git push origin master
+Q10. How can you fetch the latest changes from the remote repository without merging them automatically?A10.
+
+Bash
+git fetch origin
+Q11. You're on the main branch and want to start working on a new feature called search-filter. What command do you use?A11.
+
+Bash
+git switch -c search-filter
+Q12. You committed a file containing an API key and want to completely remove it from the repo's history. What should you do?A12.
+
+Bash
+git filter-repo --path api-key.txt --invert-paths
+Q13. You want to see all the branches that exist both locally and on the remote. What [command do you use]?A13.
+
+Bash
+git branch -a
+Q14. You're on main and want to merge the completed feature/signup branch into it. What command do you use?A14.
+
+Bash
+git switch main
+git merge feature/signup
+Q15. You tried to merge two branches and Git reported a conflict in app.js. What are the general steps to resolve it?A15.
+
+Bash
+git add app.js
+git commit
+Q16. You don't want Git to track changes to log files or node_modules/. How do you achieve this?A16.
+
+Plaintext
+*.log
+node_modules/
+Q17. You're investigating a bug and want to know who last changed line 25 in script.py. What command do you use?A17.
+
+Bash
+git blame -L 25,25 script.py
+Q18. You're in the middle of working on a file but need to switch branches quickly. What do you do to save your work?A18.
+
+Bash
+git stash
+Q19. You previously ran git stash and now want to restore those changes. What command do you use?A19.
+
+Bash
+git stash pop
+Q20. The feature/test branch is no longer needed. How do you delete it locally?A20.
+
+Bash
+git branch -d feature/test
+Q21. You just merged the feature-ui branch into main. You want to clean up your local branches. How do you safely delete feature-ui?A21.
+
+Bash
+git branch -d feature-ui
+Q22. You created a branch feature-experiment, made some changes, but now realize the code is no longer needed. You want to delete it, even though it hasn't been merged. What command will you use?A22.
+
+Bash
+git branch -D feature-experiment
+Q23. You're currently on the feature-login branch and want to delete feature-ui. What must you ensure before running the delete command?A23.
+
+Bash
+git switch feature-login
+git branch -d feature-ui
+Q24. You want to delete bugfix-footer, but you're unsure if it's been merged. What should you do before deleting it?A24.
+
+Bash
+git branch --merged
+git branch -d bugfix-footer
+Q25. You finished working on feature-a, feature-b, and feature-c. All have been merged into main. How do you delete them in one command?A25.
+
+Bash
+git branch -d feature-a feature-b feature-c
+```[cite: 28, 29, 30, 31, 32, 33, 34, 35]
+
+---
+
+## Scenario Based Questions on Working with Remote Repository Using Git Commands
+
+**Q1.** Specify the git command when you're starting work on a project and need to clone a remote repository to your local machine.
+**A1.**
+```bash
+git clone https://github.com/hello-tej/SE_Practice.git
+Q2. Specify the git command if you want to see the remotes that are connected to your local repository.A2.
+
+Bash
+git remote -v
+Q3. Specify the git command if you want to add a new remote repository to your local repository.A3.
+
+Bash
+git remote add origin https://github.com/hello-tej/SE_Practice.git
+Q4. Specify the git command to remove a remote repository from your local configuration:A4.
+
+Bash
+git remote remove origin
+Q5. Specify the git command if you want to rename an existing remote:A5.
+
+Bash
+git remote rename origin upstream
+Q6. Specify the git command to fetch updates from the remote repository but not merge them into your local branch.A6.
+
+Bash
+git fetch origin
+Q7. Specify the git command to pull the latest changes from the remote repository and merge them into your local branch.A7.
+
+Bash
+git pull origin master
+Q8. Specify the git command to push your local commits to a remote repository.A8.
+
+Bash
+git push origin master
+Q9. Specify the git command to [use] when pushing for the first time and want to set the remote branch you are pushing to.A9.
+
+Bash
+git push -u origin master
+Q10. Specify the git command to change the URL of a remote (e.g., after changing the remote repository address).A10.
+
+Bash
+git remote set-url origin https://github.com/hello-tej/SE_Practice.git
+Q11. Specify the git command if you want to list all branches on the remote repository.A11.
+
+Bash
+git branch -r
+Q12. Specify the git command if a branch was deleted on the remote but still shows up locally.A12.
+
+Bash
+git fetch --prune
+Q13. Specify the git command to fetch a specific branch from a remote.A13.
+
+Bash
+git fetch origin feature/login
+Q14. Specify the git command if you want to see detailed information about a remote repository.A14.
+
+Bash
+git remote show origin
+Q15. Specify the git command if you want to rebase your local branch onto a remote branch (this can be useful to keep your history linear).A15.
+
+Bash
+git fetch origin
+git rebase origin/master
+```[cite: 35, 36, 37, 38]
+
+EXP. 3: Collaborative coding using git
+Steps & Commands (Copy-Ready)
+a. Facilitating Collaborative Work by Creating Organization
+Go to GitHub, click New organization, and select Create a free organization.
+
+Enter organization details (name, associated email, verification) and click Next.
+
+Add members to the group, have collaborators accept invitations, and click Complete setup.
+
+Configure base permissions under Settings > Member privileges > Base permissions (e.g., Write for repository/project base permissions as shown).
+
+Create the remote repository inside the organization (e.g., Teams-project-1/SE_remote_109876) and manage collaborator roles under Settings > Collaborators and teams.
+
+b. Coordinating Through a Shared RepositoryCollaborator 1 (Repo Owner): Go to Settings > Collaborators (or Collaborators and teams), click Add people under Manage access, and wait for Collaborator 2 to accept the invite.
+Collaborator 2 Steps:
+
+git config --global user.name "Your Name"
+git config --global user.email you@example.com
+git remote -v
+git clone https://github.com/Teams-project-1/SE_remote_109876.git
+cd SE_remote_109876
+git checkout -b feature-1
+touch File1.txt
+git status
+git add .
+git commit -m "Shaik Added File"
+git push origin feature-1
+```[cite: 42, 43]
+* **Keeping Branch Updated:**
+```bash
+git checkout main
+git pull origin main
+git checkout feature/your-new-feature
+git merge main
+```[cite: 44]
+
+#### Fork & Pull Request Workflow
+1. Open the target public repository on GitHub and click **Fork** at top-right.
+2. Clone your forked copy and push changes:
+```bash
+git clone https://github.com/your-username/awesome-project.git
+git add .
+git commit -m "Update file"
+git push origin main
+```[cite: 45, 46]
+3. Open a **Pull request** back to the original repository, review changes (**Files changed > Review changes > Comment / Approve / Request changes > Submit review**), and click **Merge pull request**[cite: 46, 47].
+4. Sync local branches:
+```bash
+git checkout main
+git pull origin main
+git checkout feature/your-new-feature
+git merge main
+```[cite: 48]
+
+#### 2. Resolving Merge Conflicts
+```bash
+git checkout -b feature-person2
+echo "Hello from Person 2" >> README.md
+git add README.md
+git commit -m "person1 updated README"
+git push -u origin feature-person2
+```[cite: 48]
+When a conflict occurs:
+```bash
+git status
+git add fl.txt
+git commit
+
+git rebase --continue
+git merge --abort
+
+git status
+git commit -m "Resolved merge conflict in README.md"
+git push origin main
+```[cite: 49, 50, 51]
+
+#### 3. Creating and Applying a Patch
+```bash
+git clone https://github.com/Teams-project-1/SE_remote_109876.git
+cd SE_remote_109876
+git log
+git status
+git add .
+git commit -m "Added README using patch"
+git format-patch -1 4c81ab3
+git format-patch -3
+git format-patch <base_commit>..HEAD
+```[cite: 52, 53]
+To apply the patch on the target/owner side:
+```bash
+git apply my-changes.patch
+git am 0001-Added-README-using-patch.patch
+git apply 0001-Your-commit-message.patch
+git log --oneline
+git status
+```[cite: 53, 54]
+
+---
+
+### Scenario Based Questions on Working with Remote Repository
+
+**Q1.** You've cloned a repository and made some changes to a local branch. Now you want to push these changes to the remote repository, but you're getting an error saying "rejected - non-fast-forward." How would you resolve this?
+**A1.**
+```bash
+git pull --rebase origin main
+git push origin main
+```[cite: 54]
+
+**Q2.** You've been working on a feature branch, and now you need to push it to the remote repository. However, the remote repository already has a main branch. How do you push your feature branch without affecting the main branch?
+**A2.**
+```bash
+git push -u origin feature
+```[cite: 54]
+
+**Q3.** You cloned a remote repository, but after a while, the repository's structure changed and new branches were added. How would you keep your local repository updated with the latest changes from the remote repository?
+**A3.**
+```bash
+git fetch --all
+git branch -r
+```[cite: 54]
+
+**Q4.** A colleague has pushed some changes to the main branch, but you have local changes in the same branch. You want to pull their changes, but you want to avoid merge conflicts. What steps would you take?
+**A4.**
+```bash
+git stash
+git pull --rebase origin main
+git stash pop
+```[cite: 54]
+
+**Q5.** You accidentally pushed a sensitive file (e.g., API keys) to the remote repository. How would you fix this situation?
+**A5.**
+```bash
+git filter-repo --path api-key.txt --invert-paths
+git push --force origin main
+```[cite: 54]
+
+**Q6.** You're working on a feature branch, and your manager requests that you integrate the latest changes from main into your feature branch. What steps would you take?
+**A6.**
+```bash
+git switch feature-branch
+git fetch origin
+git merge origin/main
+```[cite: 54, 55]
+
+**Q7.** You cloned a remote repository, but later you find that you need to push your changes to a different remote repository. How do you configure your local repository to push to this new remote?
+**A7.**
+```bash
+git remote set-url origin https://github.com/hello-tej.git
+```[cite: 55]
+
+**Q8.** After running `git pull`, you notice that your local branch is behind the remote branch. How would you proceed to bring your local branch up to date without losing your local changes?
+**A8.**
+```bash
+git pull --rebase origin main
+```[cite: 55]
+
+**Q9.** You're working on a project with multiple collaborators, and you notice that your local changes conflict with changes that have been pushed by others. How would you resolve the conflicts?
+**A9.**
+```bash
+git pull origin main
+git add .
+git commit
+git push origin main
+```[cite: 55]
+
+**Q10.** You've pushed a feature branch to a remote repository, but now you need to delete the branch from the remote. How would you do that?
+**A10.**
+```bash
+git push origin --delete feature-branch
+```[cite: 55, 56]
+
+**Q11.** (Four-developer scenario: `feature/ui-update`, bug fix pushed to `main`, push fails due to upstream changes, teammate sends `fix.patch`.) What command will you use to bring your local main branch up to date with the remote repository before merging it into your feature branch?
+**A11.**
+```bash
+git switch main
+git pull origin main
+```[cite: 56]
+
+**Q12.** How will you update your `feature/ui-update` branch to reflect the latest changes from main?
+**A12.**
+```bash
+git switch feature/ui-update
+git merge main
+```[cite: 56, 57]
+
+**Q13.** Which command should you use to attempt pushing your local feature branch again, and what should you do if it fails due to conflicts?
+**A13.**
+```bash
+git pull --rebase origin feature/ui-update
+git push origin feature/ui-update
+```[cite: 57]
+
+**Q14.** How do you apply a patch file provided by your teammate and include it in your commit history?
+**A14.**
+```bash
+git apply fix.patch
+git add .
+git commit -m "Applied CSS patch"
+```[cite: 57]
+
+**Q15.** After successful testing, describe the steps (with commands) to merge your feature branch into main and push it to GitHub.
+**A15.**
+```bash
+git switch main
+git merge feature/ui-update
+git push origin main
+```[cite: 57]
